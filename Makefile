@@ -14,8 +14,8 @@
 EXECUTABLE := xmain    # 可执行文件名
 LIBDIR:= /usr/lib64/             # 静态库目录
 LIBS :=   # /usr/lib64/libglib-2.0.a            # 静态库文件名
-INCLUDES:=.  include  # /usr/include/glib-2.0  /usr/lib64/glib-2.0/include
-SRCDIR:= src  example
+INCLUDES:=.  include  cjson # /usr/include/glib-2.0  /usr/lib64/glib-2.0/include
+SRCDIR:= src  example cjson
 #
 # # Now alter any implicit rules' variables if you like, e.g.:
 

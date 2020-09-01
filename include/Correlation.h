@@ -3,10 +3,12 @@
 #include <cstdlib>
 #include <vector>
 #include <list>
+#include <string>
 #include <time.h>
 //#include <glib.h>
 
- 
+using namespace std;
+
 int xmltest();
 
 class Directive;
@@ -50,6 +52,24 @@ class Event
     private:
 };
 
+
+// 类名： Directive
+// 说明： 关联指令
+class Directive
+{
+    public:
+        Directive();
+        virtual ~Directive();
+        int m_d;
+        Rule* GetCurrentRule();
+        bool IsMatchEvent(Event event);
+
+
+    protected:
+
+    private:
+};
+
 class Backlogs
 {
     public:
@@ -68,6 +88,12 @@ class Backlogs
         void UpdateTimeout();
         void SetRuleVars(TreeNode * node);
         TreeNode* GetNodeBranchByLevel(TreeNode * node, int level);
+        TreeNode* GetRootNode();
+
+    public:
+        int directive_id;
+        string name;
+        int priority;
 
     protected:
 
@@ -92,24 +118,25 @@ class Rule
     public:
         int src_port;
         int dst_port;
+        string type;
+        string name;
+        int reliability;
+        int occurrence;
+        string from;
+        string to;
+        string port;
+        string port_from;
+        string port_to;
+        int timeout;
+        string plugin_id;
+        string plugin_sid;
+
 
 };
 
-class Directive
-{
-    public:
-        Directive();
-        virtual ~Directive();
-        int m_d;
-        Rule* GetCurrentRule();
-        bool IsMatchEvent(Event event);
 
-
-    protected:
-
-    private:
-};
-
+// Class:   Correlation
+// 说明：   关联引擎管理类
 class Correlation
 {
     public:

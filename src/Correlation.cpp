@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdio.h>
 
+
 using namespace std;
 
 //gchar     *version2 = "fadfa";
@@ -415,7 +416,7 @@ void Correlation::MatchDirective(Event event)
 {
     //查找所有和事件的plugin_id匹配的所有指令
     std::list<Directive *> lstDirective;
-    // 
+    //
     Directive * pDirective;
     bool  isDataInList = false;
     bool  isEventMatchRootRule = true;
@@ -500,3 +501,4 @@ vector<TreeNode*> TreeNode::GetChildren()
 {
     return children;
 }
+
