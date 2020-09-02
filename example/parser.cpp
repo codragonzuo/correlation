@@ -1,7 +1,7 @@
 #include "parser.h"
 #include <iostream>
 #include <string>
-#include <cstring>
+//#include <cstring>
 #include "cJSON.h"
 #include "Correlation.h"
 #include <stdio.h>
@@ -69,6 +69,7 @@ char text[] = "{\"timestamp\":\"2019-03-03 08:45:57\", \"value\":1}";
 
 void parse_directive()
 {
+    Backlogs *backlogs;
     // printf("%s\n", directive_text);
     cJSON *json;
     //*json_value, *json_timestamp;
@@ -92,6 +93,14 @@ void parse_directive()
 
     cJSON *rules;
 
+    TreeNode * rulenode =NULL;
+    TreeNode * currentnode = NULL;
+    TreeNode * lastnode = NULL;
+
+    Rule * rule = NULL;
+    Rule * lastrule = NULL;
+    int ruletype = RULE_TYPE_PARENT;
+
     //const cJSON *resolution = NULL;
 
     json = cJSON_Parse(directive_text);
@@ -113,12 +122,12 @@ void parse_directive()
     if (directives) directive = directives->child;
     while (directive)
     {
-        Backlogs *backlogs = new Backlogs();
+        backlogs = new Backlogs();
 
         directive_id = cJSON_GetObjectItem(directive, "@id");
         if (cJSON_IsString(directive_id) && (directive_id->valuestring != NULL))
         {
-            printf("directive id : \"%s\"   num:%d\n", directive_id->valuestring, std::stoi(directive_id->valuestring, 0, 10));
+            printf("directive id : \"%s\"   num:%d\n", directive_id->valuestring, stoi(directive_id->valuestring, 0, 10));
             backlogs->directive_id = stoi(directive_id->valuestring, 0, 10);
         }
         directive_name = cJSON_GetObjectItem(directive, "@name");
@@ -227,6 +236,37 @@ void parse_directive()
                 rule->plugin_sid = rule_plugin_sid->valuestring;
             }
 
+            currentnode = new TreeNode(NULL);
+            currentnode->SetRule(rule);
+
+            //创建根节点
+            if (lastnode == NULL)
+            {
+                currentnode = new TreeNode(NULL);
+                currentnode->SetRule(rule);
+
+                //设置指令根节点
+                backlogs->SetRootNode(currentnode);
+            }
+            else
+            {
+                 //
+                 if  (ruletype == RULE_TYPE_CHILD)
+                 {
+                     //是上一节点的孩子节点
+                     currentnode = new TreeNode(lastnode);
+                     currentnode->SetRule(rule);
+
+                 }
+                 else if (ruletype == RULE_TYPE_BRO)
+                 {
+                     //是上一节点的兄弟节点，同一个父节点
+                     currentnode = new TreeNode(lastnode->GetParent());
+                     currentnode->SetRule(rule);
+
+                 }
+            }
+
             /* rules */
             rules = cJSON_GetObjectItem(directive_rule, "rules");
             if (cJSON_IsString(rules) && (rules->valuestring != NULL))
@@ -234,14 +274,25 @@ void parse_directive()
                 //printf("rules  : \"%s\"\n", rules->valuestring);
             }
             if ((rules !=0 ) &&  (rules->child))
-                directive_rule = rules->child;
+            {
+                directive_rule = rules->child;     //下一规则是孩子节点
+                ruletype = RULE_TYPE_CHILD;
+                lastrule = rule;
+            }
             else
             {
-                directive_rule = directive_rule->next;
+                directive_rule = directive_rule->next; //下一规则是兄弟节点
+                ruletype = RULE_TYPE_BRO;
+                lastrule = rule;
             }
         }
         directive = directive->next;
     }
+}
+
+void PrintBacklog()
+{
+
 }
 
 

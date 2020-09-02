@@ -5,7 +5,7 @@
 #include <list>
 #include <string>
 #include <time.h>
-//#include <glib.h>
+
 
 using namespace std;
 
@@ -26,6 +26,7 @@ public:
 
 	void SetLevel(size_t level);
 	void SetNumber(size_t number);
+	void SetRule(Rule * rule);
 	size_t GetLevel();
 	size_t GetNumber();
 	TreeNode* AddChild();
@@ -35,6 +36,7 @@ public:
 private:
 	size_t level;
 	size_t number;
+	Rule * rule;
 	TreeNode* parent;
 	std::vector<TreeNode*> children;
 };
@@ -89,6 +91,7 @@ class Backlogs
         void SetRuleVars(TreeNode * node);
         TreeNode* GetNodeBranchByLevel(TreeNode * node, int level);
         TreeNode* GetRootNode();
+        void SetRootNode(TreeNode* rootnode);
 
     public:
         int directive_id;
@@ -96,10 +99,14 @@ class Backlogs
         int priority;
 
     protected:
+        TreeNode* Rootnode;
 
     private:
 };
 
+#define RULE_TYPE_PARENT    0
+#define RULE_TYPE_CHILD     1
+#define RULE_TYPE_BRO       2
 
 class Rule
 {

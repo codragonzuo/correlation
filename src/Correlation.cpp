@@ -279,6 +279,11 @@ TreeNode* Backlogs::GetNodeBranchByLevel(TreeNode * node, int level)
 
 }
 
+void  Backlogs::SetRootNode(TreeNode* rootnode)
+{
+
+}
+
 bool Rule::MatchEvent(Event event)
 {
     return true;
@@ -500,5 +505,10 @@ TreeNode* TreeNode::AddChild()
 vector<TreeNode*> TreeNode::GetChildren()
 {
     return children;
+}
+
+void TreeNode::SetRule(Rule * rule)
+{
+
 }
 
