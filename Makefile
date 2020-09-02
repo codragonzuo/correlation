@@ -12,15 +12,15 @@
 #
 #
 EXECUTABLE := xmain    # 可执行文件名
-LIBDIR:= /usr/lib64/             # 静态库目录
-LIBS :=   # /usr/lib64/libglib-2.0.a            # 静态库文件名
-INCLUDES:=.  include  cjson # /usr/include/glib-2.0  /usr/lib64/glib-2.0/include
-SRCDIR:= src  example cjson
+LIBDIR:= 
+LIBS :=   
+INCLUDES:=.  include  cjson example
+SRCDIR:= src  cjson example
 #
 # # Now alter any implicit rules' variables if you like, e.g.:
 
 CC:=g++
-CFLAGS := -g -Wall -O3
+CFLAGS := -g -Wall -O3  -std=c++11
 CPPFLAGS := $(CFLAGS)
 CPPFLAGS += $(addprefix -I,$(INCLUDES))
 CPPFLAGS += -MMD

@@ -24,8 +24,8 @@
 #define cJSON_Utils__h
 
 #ifdef __cplusplus
-extern "C"
-{
+//extern "C"
+//{
 #endif
 
 #include "cJSON.h"
@@ -82,7 +82,7 @@ CJSON_PUBLIC(void) cJSONUtils_SortObject(cJSON * const object);
 CJSON_PUBLIC(void) cJSONUtils_SortObjectCaseSensitive(cJSON * const object);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif

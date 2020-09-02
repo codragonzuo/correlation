@@ -24,8 +24,8 @@
 #define cJSON__h
 
 #ifdef __cplusplus
-extern "C"
-{
+//extern "C"
+//{
 #endif
 
 #if !defined(__WINDOWS__) && (defined(WIN32) || defined(WIN64) || defined(_MSC_VER) || defined(_WIN32))
@@ -33,7 +33,7 @@ extern "C"
 #endif
 
 #ifdef __WINDOWS__
-
+vvv
 /* When compiling for windows, we specify a specific calling convention to avoid issues where we are being called from a project with a different default calling convention.  For windows you have 3 define options:
 
 CJSON_HIDE_SYMBOLS - Define this in the case where you don't want to ever dllexport symbols
@@ -287,7 +287,7 @@ CJSON_PUBLIC(void *) cJSON_malloc(size_t size);
 CJSON_PUBLIC(void) cJSON_free(void *object);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif

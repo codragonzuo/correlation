@@ -1,11 +1,12 @@
-
+#include "parser.h"
 #include <iostream>
 #include <string>
+#include <cstring>
 #include "cJSON.h"
-#include "parser.h"
 #include "Correlation.h"
 #include <stdio.h>
-using namespace std;
+
+//using namespace std;
 
 /*
 <directive id="50013" name="AV-FREE-FEED Bruteforce attack, HTTP authentication attack against SRC_IP" priority="4">
@@ -69,7 +70,8 @@ char text[] = "{\"timestamp\":\"2019-03-03 08:45:57\", \"value\":1}";
 void parse_directive()
 {
     // printf("%s\n", directive_text);
-    cJSON *json, *json_value, *json_timestamp;
+    cJSON *json;
+    //*json_value, *json_timestamp;
     cJSON *directives;
     cJSON *directive;
     cJSON *directive_id;
@@ -90,7 +92,7 @@ void parse_directive()
 
     cJSON *rules;
 
-    const cJSON *resolution = NULL;
+    //const cJSON *resolution = NULL;
 
     json = cJSON_Parse(directive_text);
     if(NULL == json)
@@ -101,7 +103,7 @@ void parse_directive()
 
 
     directives = cJSON_GetObjectItem(json, "directive");
-    printf("%d\n",directives);
+    //printf("%d\n",directives);
     if(directives->type == cJSON_Number)
     {
         printf("value: %d\n", directives->valueint);
