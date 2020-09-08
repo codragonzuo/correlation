@@ -331,7 +331,7 @@ class IpAddress {
         IpAddress(IpAddress* ipa);
         virtual ~IpAddress();
     private:
-        GetOctetsIP(string ip, vector<int> &octetsIP);
+        int GetOctetsIP(string ip, vector<int> &octetsIP);
 };
 
 class INetwork {
