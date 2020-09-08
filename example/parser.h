@@ -4,13 +4,19 @@
 
 #include "cJSON.h"
 
+#include "Correlation.h"
+
 
 
 void parse_text();
 
-void parse_directive();
+Backlogs * parse_directive();
 
+Backlogs *  ParseDirective();
+void PrintBacklog(Backlogs * backlogs);
 
-void PrintBacklog();
+void RecurseTree(TreeNode* node);
+
+void RecurseJsonNode(TreeNode * treenode, cJSON *jsonnode);
 
 #endif // PARSDFSFSDFF
