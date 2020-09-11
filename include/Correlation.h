@@ -118,19 +118,23 @@ class Backlogs
         //void SetRootNode(TreeNode * node);
         void SetRootNode(TreeNode* rootnode);
         void SetClearAllMatchData();
-        time_t first_event;
-        time_t last_event;
         void Clear();
+        bool IsDataEmpty();
+        void SetEmpty(bool isEmpty);
 
-    public:
-        int directive_id;
-        string name;
-        int priority;
+
         void SetMatched(bool matched);
         bool IsMatched();
         int backlog_id;
         int GetBacklogsId();
 
+    public:
+        int *a;
+        int directive_id;
+        string name;
+        int priority;
+        time_t first_event;
+        time_t last_event;
 
     protected:
         TreeNode* Rootnode;
@@ -141,6 +145,7 @@ class Backlogs
         bool matched;
         time_t time_out;
         time_t time_last;
+        bool isEmpty;
 };
 
 #define RULE_TYPE_PARENT    0
@@ -150,24 +155,37 @@ class Backlogs
 class Rule
 {
     public:
-        TreeNode * child;
+        Rule();
+        virtual ~Rule();
+    public:
         bool MatchEvent(Event event);
         void SetEventDataToRule(Event event);
-        void SetTimeLast(time_t time);
-        //std::vector<RuleVar*> vecVars;
+        void SetEventMatchLastTime(time_t time);
+
 
     public:
-        int GetSrcPort();
-        int GetDstPort();
-        void AddSrcPort(int port);
-        void AddSrcPortNot(int port);
-        void AddDstPort(int port);
-        void AddDstPortNot(int port);
+        int GetEventDataSrcPort();
+        int GetEventDataDstPort();
+
+    public:
+        /* 规则匹配端口 */
         std::map<int, int> mapSrcPort;
         std::map<int, int> mapSrcPortNot;
         std::map<int, int> mapDstPort;
         std::map<int, int> mapDstPortNot;
+
+        // 关联字段引用定义
         std::list<RuleVar*> lstRuleVar;
+
+
+        void AddRuleMatchSrcPort(int port);
+        void AddRuleMatchSrcPortNot(int port);
+        void AddRuleMatchDstPort(int port);
+        void AddRuleMatchDstPortNot(int port);
+        void SetRuleMatchPort(char* portstring, bool is_srcport);
+
+
+
         void SetRuleVarsToList(RuleVar *var);
 
     public:
@@ -177,8 +195,8 @@ class Rule
         void AddPluginSid(int pluginSid);
         void SetRulePluginId(char* portstring);
         void SetRulePluginSid(char* portstring);
+
     public:
-        void SetRulePort(char* portstring, bool is_srcport);
         void SetRuleIp(char* ipstring, bool is_sourceip);
         void SetSrcHomeNet(bool isEnable);
         void SetDstHomeNet(bool isEnable);
@@ -207,12 +225,12 @@ class Rule
         bool MatchEventOccurence(Event event);
 
     public:
-        int src_port;
-        int dst_port;
         bool SrcHomeNetEn;
         bool DstHomeNetEn;
         bool SrcHomeNetNotEn;
         bool DstHomeNetNotEn;
+    public:
+        //保存规则定义字符
         string type;
         string name;
         int reliability;
@@ -222,25 +240,32 @@ class Rule
         string port;
         string port_from;
         string port_to;
-        int timeout;
         int plugin_id;
-        int plugin_sid;
         string protocol;
-
+        int mRuleTimeOut;
     public:
-        time_t time_last;
-        int count_occu;
+        time_t  mEventLastMatchTime;
+        int     mEventMatchCount;
+    public:
+        Rule& operator=(Rule& rule);
 
 };
 
+class BacklogsList
+{
+    public:
+        BacklogsList();
+        virtual ~BacklogsList();
+        std::list<Backlogs *> lstBacklogs;
+};
 
 // Class:   Correlation
 // 说明：   关联引擎管理类
 class Correlation
 {
     public:
-        std::list<Backlogs *> lstBacklogs;
-        std::map<int, std::list<Backlogs *>> mapBacklogs; /* 建立以plugin_id为Key索引，存储plugin_id的 listbacklogs */
+        std::list<Backlogs *> lstMatchedBacklogs;
+        std::map<int, BacklogsList*> mapBacklogs; /* 建立以plugin_id为Key索引，存储plugin_id的 listbacklogs */
 
     public:
         Correlation();
@@ -250,11 +275,15 @@ class Correlation
         void MatchBacklogs(Event event);
         void MatchDirective(Event event);
         std::vector<Backlogs*> vecBacklogs;
-
     protected:
 
     private:
+        void AddBacklogsMap(Backlogs* pBacklogs);
 };
+
+
+
+
 
 #define SIM_HOME_NET_CONST          "HOME_NET"
 
@@ -324,14 +353,17 @@ class RuleVar {
       bool          negated;  //if this is YES, then the field referenced will be stored in the negated fields (ie. src_ports_not, plugin_sids_not...)
 };
 
+int GetOctetsIP(string ip, vector<int> &octetsIP);
 
 class IpAddress {
     public:
         IpAddress();
+        IpAddress(vector<int> &octetsIP);
         IpAddress(IpAddress* ipa);
+        IpAddress(string ip);
         virtual ~IpAddress();
-    private:
-        int GetOctetsIP(string ip, vector<int> &octetsIP);
+        vector<int> vecIpNum;
+        bool isAnyMatch;
 };
 
 class INetwork {

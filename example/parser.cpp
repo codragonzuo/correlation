@@ -1,7 +1,6 @@
 #include "parser.h"
 #include <iostream>
 #include <string>
-//#include <cstring>
 #include "cJSON.h"
 #include "Correlation.h"
 #include <stdio.h>
@@ -84,7 +83,7 @@
 */
 
 
-char directive_text[] ="{\"directive\": [{\"@id\": \"50005\", \"@name\": \"AV-FREE-FEED Bruteforce attack, Windows authentication attack against DST_IP\", \"@priority\": \"4\", \"rule\": {\"@type\": \"detector\", \"@name\": \"Windows authentication failure attempts\", \"@reliability\": \"1\", \"@occurrence\": \"1\", \"@from\": \"ANY\", \"@to\": \"ANY\", \"@port_from\": \"ANY\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"2\", \"@occurrence\": \"3\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"15\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"4\", \"@occurrence\": \"10\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"30\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"6\", \"@occurrence\": \"50\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"300\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"10\", \"@occurrence\": \"200\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"1000\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"10\", \"@occurrence\": \"2000\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"3600\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\"}}}}}}}}}}}}]}";
+char directive_text[] ="{\"directive\": [{\"@id\": \"50005\", \"@name\": \"AV-FREE-FEED Bruteforce attack, Windows authentication attack against DST_IP\", \"@priority\": \"4\", \"rule\": {\"@type\": \"detector\", \"@name\": \"Windows authentication failure attempts\", \"@reliability\": \"1\", \"@occurrence\": \"1\", \"@from\": \"ANY\", \"@to\": \"ANY\", \"@port_from\": \"ANY\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"2\", \"@occurrence\": \"3\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"15\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"4\", \"@occurrence\": \"10\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"30\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"6\", \"@occurrence\": \"50\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"300\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"10\", \"@occurrence\": \"200\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"1000\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\", \"rules\": {\"rule\": {\"@type\": \"detector\", \"@name\": \"Windows Authentication failure\", \"@reliability\": \"10\", \"@occurrence\": \"2000\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"3600\", \"@port_to\": \"ANY\", \"@plugin_id\": \"7085\", \"@plugin_sid\": \"18106,18130,18135,18136\"}}}}}}}}}}}},{\"@id\": \"50113\", \"@name\": \"AV-FREE-FEED Bruteforce attack, SSH service authentication attack against DST_IP\", \"@priority\": \"4\", \"rule\": {\"@type\": \"detector1\", \"@name\": \"SSH service authentication attempt failed detected\", \"@reliability\": \"1\", \"@occurrence\": \"1\", \"@from\": \"ANY\", \"@to\": \"ANY\", \"@port_from\": \"ANY\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"1\", \"rules\": {\"rule\": {\"@type\": \"detector2\", \"@name\": \"SSH service authentication attempt failed detected\", \"@reliability\": \"2\", \"@occurrence\": \"5\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"30\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"1\", \"rules\": {\"rule\": [{\"@type\": \"detector3\", \"@name\": \"SSH service authentication attempt failed detected\", \"@reliability\": \"4\", \"@occurrence\": \"10\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"60\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"1\", \"rules\": {\"rule\": [{\"@type\": \"detector4\", \"@name\": \"SSH service authentication attempt failed detected\", \"@reliability\": \"6\", \"@occurrence\": \"100\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"3000\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"1\", \"rules\": {\"rule\": [{\"@type\": \"detector5\", \"@name\": \"SSH service authentication attempt failed detected\", \"@reliability\": \"8\", \"@occurrence\": \"1000\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"36000\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"1\", \"rules\": {\"rule\": [{\"@type\": \"detector6\", \"@name\": \"SSH service authentication attempt failed detected\", \"@reliability\": \"10\", \"@occurrence\": \"10000\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"86400\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"1\"}, {\"@type\": \"detector7\", \"@name\": \"SSH service authentication sucessful\", \"@reliability\": \"10\", \"@occurrence\": \"1\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"10\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"7\"}]}}, {\"@type\": \"detector8\", \"@name\": \"SSH service authentication sucessful\", \"@reliability\": \"1\", \"@occurrence\": \"1\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"10\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"7\"}]}}, {\"@type\": \"detector9\", \"@name\": \"SSH service authentication sucessful\", \"@reliability\": \"10\", \"@occurrence\": \"1\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"10\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"7\"}]}}, {\"@type\": \"detector10\", \"@name\": \"SSH service authentication sucessful\", \"@reliability\": \"10\", \"@occurrence\": \"1\", \"@from\": \"1:SRC_IP\", \"@to\": \"1:DST_IP\", \"@port_from\": \"ANY\", \"@time_out\": \"10\", \"@port_to\": \"ANY\", \"@plugin_id\": \"4003\", \"@plugin_sid\": \"7\"}]}}}}}]}";
 
 char text[] = "{\"timestamp\":\"2019-03-03 08:45:57\", \"value\":1}";
 
@@ -318,7 +317,7 @@ Backlogs *  parse_directive()
 }
 #endif // 0
 
-Backlogs *  ParseDirective()
+void  ParseDirective(Correlation * corre)
 {
     Backlogs *backlogs;
     // printf("%s\n", directive_text);
@@ -341,7 +340,7 @@ Backlogs *  ParseDirective()
     if(NULL == json)
     {
         printf("Error before: [%s]\n", cJSON_GetErrorPtr());
-        return NULL;
+        return;
     }
 
 
@@ -387,8 +386,12 @@ Backlogs *  ParseDirective()
              RecurseJsonNode(rulenode, directive_rule);
         }
         directive = directive->next;
+
+        corre->AddBacklogs(backlogs);
+        PrintBacklog(backlogs);
     }
-    return backlogs;
+
+    return;
 }
 
 void RecurseJsonNode(TreeNode * treenode, cJSON *jsonnode)
@@ -483,7 +486,7 @@ void RecurseJsonNode(TreeNode * treenode, cJSON *jsonnode)
         {
             printf("7  rule_port_from : \"%s\"\n", rule_port_from->valuestring);
             rule->port_from = rule_port_from->valuestring;
-            rule->SetRulePort(rule_port_from->valuestring, true);
+            rule->SetRuleMatchPort(rule_port_from->valuestring, true);
             //引用
             // 无引用
 
@@ -494,7 +497,7 @@ void RecurseJsonNode(TreeNode * treenode, cJSON *jsonnode)
         if (cJSON_IsString(rule_timeout) && (rule_timeout->valuestring != NULL))
         {
             printf("8  rule_timeout  : \"%s\"\n", rule_timeout->valuestring);
-            rule->timeout = stoi(rule_timeout->valuestring, 0, 10);
+            rule->mRuleTimeOut = stoi(rule_timeout->valuestring, 0, 10);
         }
 
         /* 9. port to */
@@ -503,7 +506,7 @@ void RecurseJsonNode(TreeNode * treenode, cJSON *jsonnode)
         {
             printf("9  rule_port_to : \"%s\"\n", rule_port_to->valuestring);
             rule->port_to = rule_port_to->valuestring;
-            rule->SetRulePort(rule_port_to->valuestring, false);
+            rule->SetRuleMatchPort(rule_port_to->valuestring, false);
         }
 
         /* 10. plug id */
@@ -518,17 +521,18 @@ void RecurseJsonNode(TreeNode * treenode, cJSON *jsonnode)
         rule_plugin_sid = cJSON_GetObjectItem(directive_rule, "@plugin_sid");
         if (cJSON_IsString(rule_plugin_sid) && (rule_plugin_sid->valuestring != NULL))
         {
-            rule->plugin_sid = stoi(rule_plugin_sid->valuestring);
-            printf("11 rule_plugin_sid  : \"%s\", %d\n", rule_plugin_sid->valuestring, rule->plugin_sid);
+            //rule->plugin_sid = stoi(rule_plugin_sid->valuestring);
+            printf("11 rule_plugin_sid  : \"%s\"\n", rule_plugin_sid->valuestring);
+            rule->SetRulePluginSid(rule_plugin_sid->valuestring);
 
         }
 
         /* 12. protocol */
-        rule_protocol = cJSON_GetObjectItem(directive_rule, "@plugin_sid");
+        rule_protocol = cJSON_GetObjectItem(directive_rule, "@protocol");
         if (cJSON_IsString(rule_protocol) && (rule_protocol->valuestring != NULL))
         {
-            rule->protocol = rule_plugin_sid->valuestring;
-            printf("11 rule_plugin_sid  : \"%s\", %d\n", rule_protocol->valuestring, rule->protocol);
+            rule->protocol = rule_protocol->valuestring;
+            printf("12 rule_protocol  : \"%s\", %d\n", rule_protocol->valuestring, rule->protocol);
 
         }
 
@@ -607,11 +611,14 @@ void PrintBacklog(Backlogs * backlogs)
 {
     if (backlogs == NULL) return;
 
+    printf("------------------------------PrintBacklog-----------------------------------------\n");
+
     TreeNode* rulenode = backlogs->GetRootNode();
 
     if (rulenode == NULL) return;
 
     RecurseTree(rulenode);
+    printf("------------------------------PrintBacklog end-------------------------------------\n");
 }
 
 

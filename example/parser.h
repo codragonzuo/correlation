@@ -12,7 +12,8 @@ void parse_text();
 
 Backlogs * parse_directive();
 
-Backlogs *  ParseDirective();
+void  ParseDirective(Correlation * corre);
+
 void PrintBacklog(Backlogs * backlogs);
 
 void RecurseTree(TreeNode* node);

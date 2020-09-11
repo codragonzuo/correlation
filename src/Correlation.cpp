@@ -100,26 +100,23 @@ Event::~Event()
     //dtor
 }
 
-Correlation::Correlation()
+BacklogsList::BacklogsList()
 {
     //ctor
 }
 
-Correlation::~Correlation()
+BacklogsList::~BacklogsList()
 {
     //dtor
 }
 
-void Correlation::AddBacklogs(Backlogs* pBacklogs)
-{
-    if (pBacklogs == NULL) return;
-    this->vecBacklogs.push_back(pBacklogs);
 
-}
 
 Backlogs::Backlogs()
 {
+    /* 设置初始值 */
     matched = false;
+    this->SetEmpty(true);
     //ctor
 }
 
@@ -128,10 +125,7 @@ Backlogs::~Backlogs()
     //dtor
 }
 
-void Backlogs::Clear()
-{
 
-}
 
 int Backlogs::GetBacklogsId()
 {
@@ -167,6 +161,8 @@ bool Backlogs::IsTimeout()
 
 
 // sim_directive_backlog_match_by_event  L764
+// 说明: (1) 遍历当前节点的所有孩子节点规则，搜索匹配的孩子节点
+//（2）规则的编写特点是同一级别的孩子节点规则是不同的，不可能同一个事件匹配到两个孩子节点
 bool Backlogs::MatchEvent(Event event)
 {
     //是否匹配当前事件
@@ -229,12 +225,12 @@ bool Backlogs::MatchEvent(Event event)
             pRule->SetEventDataToRule(event);
 
             // L801
-            pRule->SetTimeLast(time_last);
+            pRule->SetEventMatchLastTime(time_last);
         }
 
 
         // L803 如果当前节点是叶子节点
-        std::vector<TreeNode*>  vecTreeNode2 = node->GetChildren();
+        vecTreeNode2 = node->GetChildren();
         if (vecTreeNode2.empty())
         {
             // L821 已经搜索到叶子节点，说明已经匹配指令
@@ -252,7 +248,7 @@ bool Backlogs::MatchEvent(Event event)
                 child_node = *it2;
 
                 pRule = (Rule*)  child_node->GetRule();
-                pRule->SetTimeLast(time_last);
+                pRule->SetEventMatchLastTime(time_last);
 
                 // L814 把当前匹配规则的所有引用数据Var传递到孩子节点
                 SetRuleRefVars(child_node);
@@ -386,20 +382,20 @@ void Backlogs::SetRuleRefVars(TreeNode * node)
                 pRule->SetVarIp(ipa, ruleVar);
                 break;
             case SIM_RULE_VAR_SRC_PORT:
-                port = pRuleUp->GetSrcPort();
+                port = pRuleUp->GetEventDataSrcPort();
                 switch (ruleVar->attr)
                 {
                     case SIM_RULE_VAR_SRC_PORT:
                         if (ruleVar->negated)
-                            pRule->AddSrcPortNot(port);
+                            pRule->AddRuleMatchSrcPortNot(port);
                         else
-                            pRule->AddSrcPort(port);
+                            pRule->AddRuleMatchSrcPort(port);
                         break;
                     case SIM_RULE_VAR_DST_PORT:
                         if (ruleVar->negated)
-                            pRule->AddDstPortNot(port);
+                            pRule->AddRuleMatchDstPortNot(port);
                         else
-                            pRule->AddDstPort(port);
+                            pRule->AddRuleMatchDstPort(port);
                         break;
                     default:
                         break;
@@ -407,20 +403,20 @@ void Backlogs::SetRuleRefVars(TreeNode * node)
                 break;
 
             case SIM_RULE_VAR_DST_PORT:
-                port = pRuleUp->GetDstPort();
+                port = pRuleUp->GetEventDataDstPort();
                 switch (ruleVar->attr)
                 {
                     case SIM_RULE_VAR_SRC_PORT:
                         if (ruleVar->negated)
-                            pRule->AddSrcPortNot(port);
+                            pRule->AddRuleMatchSrcPortNot(port);
                         else
-                            pRule->AddSrcPort(port);
+                            pRule->AddRuleMatchSrcPort(port);
                         break;
                     case SIM_RULE_VAR_DST_PORT:
                         if (ruleVar->negated)
-                            pRule->AddDstPortNot(port);
+                            pRule->AddRuleMatchDstPortNot(port);
                         else
-                            pRule->AddDstPort(port);
+                            pRule->AddRuleMatchDstPort(port);
                         break;
                     default:
                         break;
@@ -471,25 +467,82 @@ void Backlogs::SetClearAllMatchData()
     return;
 }
 
+void Backlogs::Clear()
+{
+    this->SetEmpty(false);
+}
 
+bool Backlogs::IsDataEmpty()
+{
+    return this->isEmpty;
+}
+
+void Backlogs::SetEmpty(bool isEmpty)
+{
+    this->isEmpty = isEmpty;
+}
 
 TreeNode* Backlogs::GetRootNode()
 {
     return this->Rootnode;
 }
 
+Rule::Rule()
+{
+    this->mRuleTimeOut = 0;
+    this->mEventMatchCount = 0;
+}
+Rule::~Rule()
+{
+
+}
+
 bool Rule::MatchEvent(Event event)
 {
-    if (event.plugin_sid != this->plugin_sid)
+    bool matched = false;
+    //if (event.plugin_sid == this->plugin_sid)
+    //{
+    //    matched = true;
+    //}
+
+    //对于根规则，from 和 to 是 any，不需要判断
+    /*
+    if (this->MatchSrcIp(event))
     {
-        return true;
+        matched = true;
     }
 
+    if (this->MatchDstIp(event))
+    {
+        matched = true;
+    }
+    */
 
+    // L4985 occurrence匹配
+    if (this->occurrence)
+    {
+        if (this->occurrence != this->mEventMatchCount)
+        {
+            this->mEventMatchCount ++;
+            event.count = this->mEventMatchCount -1;
+            matched = false;
+            return false;
+        }
+        else
+        {
+            event.count = this->occurrence;
+            this->mEventMatchCount = 1;
 
+        }
+    }
+    else
+    {
+        event.count = 1;
+    }
 
+    event.rule_matched = true;
 
-    return true;
+    return matched;
 }
 
 bool Rule::MatchEventOccurence(Event event)
@@ -497,22 +550,20 @@ bool Rule::MatchEventOccurence(Event event)
 
     if (this->occurrence >1)
     {
-        if   (this->timeout && this->time_last)
-            this->time_last = time(NULL);
-        if (this->occurrence != this->count_occu)
+        if   (this->mRuleTimeOut && this->mEventLastMatchTime)
+            this->SetEventMatchLastTime(time(NULL));
+        if (this->occurrence != this->mEventMatchCount)
         {
-            this->count_occu++; // 加1
-            //event->count = rule->_priv->count_occu - 1; //减1
+            this->mEventMatchCount++; // 加1
         }
         else
         {
-            //event->count = rule->_priv->occurrence;
-            this->count_occu = 1;   //
+            this->mEventMatchCount = 1;   //
         }
     }
     else
     {
-        event.count = 1;  // 缺省值
+        //event.count = 1;  // 缺省值
     }
 
     return false;
@@ -531,24 +582,24 @@ void Rule::SetEventDataToRule(Event event)
 }
 
 
-void Rule::SetTimeLast(time_t time)
+void Rule::SetEventMatchLastTime(time_t time)
 {
-    this->time_last = time;
+    this->mEventLastMatchTime = time;
     return;
 }
 
 
-int Rule::GetSrcPort()
+int Rule::GetEventDataSrcPort()
 {
-    return this->src_port;
+    return 0;//this->src_port;
 }
 
-int Rule::GetDstPort()
+int Rule::GetEventDataDstPort()
 {
-    return this->dst_port;
+    return 0;//this->dst_port;
 }
 
-void Rule::AddSrcPort(int port)
+void Rule::AddRuleMatchSrcPort(int port)
 {
     /* 建立Hash表保存，Key为srcport（0-65535），值为1 */
     if ((port >=0) && (port <=65535))
@@ -559,7 +610,7 @@ void Rule::AddSrcPort(int port)
     return;
 }
 
-void Rule::AddSrcPortNot(int port)
+void Rule::AddRuleMatchSrcPortNot(int port)
 {
     /* 建立Hash表保存，Key为srcport_not（0-65535），值为1 */
     /* 建立Hash表保存，Key为srcport（0-65535），值为1 */
@@ -570,7 +621,7 @@ void Rule::AddSrcPortNot(int port)
 }
 
 
-void Rule::AddDstPort(int port)
+void Rule::AddRuleMatchDstPort(int port)
 {
     if ((port >=0) && (port <=65535))
     {
@@ -578,7 +629,7 @@ void Rule::AddDstPort(int port)
     }
 }
 
-void Rule::AddDstPortNot(int port)
+void Rule::AddRuleMatchDstPortNot(int port)
 {
     if ((port >=0) && (port <=65535))
     {
@@ -586,10 +637,20 @@ void Rule::AddDstPortNot(int port)
     }
 }
 
+/* */
+/*
+OSSIM规则的6种类型
+（1）ANY
+（2）x.x.x.x 指定IP规则
+（3）引用和引用协议属性 1:SRC_IP , 1:SRC_IP:80
+（4）网络名称,对应网段定义 192.168.150.0/24 C类子网
+（5）特定地址，使用逗号分隔 192.168.150.202, 192.168.150.201
+（6）否定形式 !192.168.150.200
 
+目前只实现引用的方式
+ */
 void Rule::SetVarIp(IpAddress *ipa, RuleVar * var)
 {
-
     if (var->attr == SIM_RULE_VAR_SRC_IA)
     {
         if (var->negated)
@@ -613,7 +674,14 @@ void Rule::SetVarIp(IpAddress *ipa, RuleVar * var)
         }
     }
 }
-
+/*
+规则保存的数据种类：
+（1）设置的规则数据 sim_xml_directive_new_rule_from_node
+     a. 引用类型，保存到 varslist
+     b. 具体的数据，保存到 list
+（2）匹配的事件的数据，直接保存到对应的sim_rule_set_event_data
+（3）匹配规则的孩子节点，把引用更新到实际数据list    sim_directive_set_rule_vars
+ */
 void Rule::SetSrcIpNot(IpAddress* ipaddress)
 {
     if (this->SrcIpNot) delete this->SrcIpNot;
@@ -641,6 +709,21 @@ void Rule::SetDstIp(IpAddress* ipaddress)
     this->DstIp = NULL;
     if (ipaddress) this->DstIp = new IpAddress(ipaddress);
 }
+
+Rule& Rule::operator=(Rule& rule)
+{
+    //释放堆内存
+
+    //赋值stack变量值
+
+    //赋值heap内存值
+
+    //指针处理
+
+    //list, vec, map处理
+    return *this;
+}
+
 
 IpAddress * Rule::GetSrcIp()
 {
@@ -671,7 +754,7 @@ void  Rule::SetRuleVarsToList(RuleVar *var)
 
 
 /* static gboolean sim_xml_directive_set_rule_ports (SimRule * rule, gchar * value, gboolean are_src_ports)*/
-void Rule::SetRulePort(char* portstring, bool is_srcport)
+void Rule::SetRuleMatchPort(char* portstring, bool is_srcport)
 {
     /* 把portstring按照','分割成字符串数组 */
     //字符串分割测试
@@ -735,16 +818,16 @@ void Rule::SetRulePort(char* portstring, bool is_srcport)
                     if (port_neg)       //if ports are ie. !1-5, all the ports in that range will be negated.
                     {
                         if (is_srcport)
-                            this->AddSrcPortNot(port);
+                            this->AddRuleMatchSrcPortNot(port);
                         else
-                            this->AddDstPortNot(port);
+                            this->AddRuleMatchDstPortNot(port);
                     }
                     else
                     {
                         if (is_srcport)
-                            this->AddSrcPort(port);
+                            this->AddRuleMatchSrcPort(port);
                         else
-                            this->AddDstPort(port);
+                            this->AddRuleMatchDstPort(port);
                     }
 
                 }
@@ -755,16 +838,16 @@ void Rule::SetRulePort(char* portstring, bool is_srcport)
                 if (port_neg)
                 {
                     if (is_srcport)
-                        this->AddSrcPortNot(port);
+                        this->AddRuleMatchSrcPortNot(port);
                     else
-                        this->AddDstPortNot(port);
+                        this->AddRuleMatchDstPortNot(port);
                 }
                 else
                 {
                     if (is_srcport)
-                        this->AddSrcPort(port);
+                        this->AddRuleMatchSrcPort(port);
                     else
-                        this->AddDstPort(port);
+                        this->AddRuleMatchDstPort(port);
                 }
             }
         }
@@ -829,13 +912,16 @@ void Rule::SetRuleIp(char* ipstring, bool is_sourceip)
             {
                 var->attr = SIM_RULE_VAR_DST_IA;
             }
-            var->type =sim_get_rule_var_from_char(token_value.substr(pos2, token_value.length()- pos2).c_str());
+            // 1:DST_IP 从冒号后面的字符开始
+            var->type =sim_get_rule_var_from_char(token_value.substr(pos2+1, token_value.length()- pos2-1).c_str());
             this->lstRuleVar.push_back(var);
         }
         else if (token_value == "ANY")
         {
+            // L1253
             if (ip_neg == false) return;
             //Do Nothing
+
 
         }
         else if (token_value == SIM_HOME_NET_CONST)  ////usually, "HOME_NET"
@@ -904,9 +990,19 @@ void Rule::SetDstHomeNetNot(bool isEnable)
 }
 
 
+
+
 /* L5492 */
 bool Rule::MatchSrcIp(Event event)
 {
+    if (this->SrcIp->vecIpNum[0]==event.SrcIp->vecIpNum[0] &&
+        this->SrcIp->vecIpNum[1]==event.SrcIp->vecIpNum[1] &&
+        this->SrcIp->vecIpNum[2]==event.SrcIp->vecIpNum[2] &&
+        this->SrcIp->vecIpNum[3]==event.SrcIp->vecIpNum[3])
+            return true;
+    else
+        return false;
+    #if 0
     bool isInet = true;
     bool isInetNot = true;
     bool positive_match = false;
@@ -929,13 +1025,20 @@ bool Rule::MatchSrcIp(Event event)
 
 
     // HOME_NET定义了框架下的所有网络   // !HOME_NET
-
-
     return false;
+    #endif
 }
 
 bool Rule::MatchDstIp(Event event)
 {
+    if (this->SrcIp->vecIpNum[0]==event.SrcIp->vecIpNum[0] &&
+        this->SrcIp->vecIpNum[1]==event.SrcIp->vecIpNum[1] &&
+        this->SrcIp->vecIpNum[2]==event.SrcIp->vecIpNum[2] &&
+        this->SrcIp->vecIpNum[3]==event.SrcIp->vecIpNum[3])
+            return true;
+    else
+        return false;
+    #if 0
     bool isInet = true;
     bool isInetNot = true;
     bool positive_match = false;
@@ -961,6 +1064,7 @@ bool Rule::MatchDstIp(Event event)
 
 
     return false;
+    #endif
 }
 
 bool Rule::MatchSrcHost(Event event)
@@ -1028,11 +1132,67 @@ void Rule::SetRulePluginSid(char* portstring)
 
 }
 
+Correlation::Correlation()
+{
+    //ctor
+}
+
+Correlation::~Correlation()
+{
+    //dtor
+}
+
+void Correlation::AddBacklogs(Backlogs* pBacklogs)
+{
+    if (pBacklogs == NULL) return;
+    this->vecBacklogs.push_back(pBacklogs);
+
+    /* 加入当前backlogs到MAP表里 */
+    this->AddBacklogsMap(pBacklogs);
+}
+
+void Correlation::AddBacklogsMap(Backlogs* pBacklogs)
+{
+    BacklogsList  *blist;
+    std::map<int, BacklogsList *> thismap;
+    std::map<int, BacklogsList *>::iterator  itr;
+    std::list<Backlogs *> lstBacklogsPlugin;
+    std::list<Backlogs *>::iterator it_plugin;
+    std::list<Backlogs *>::iterator it;
+    TreeNode * rootnode;
+    Rule * rootrule;
+    int plugin_id;
+
+    if (pBacklogs == NULL) return;
+
+    rootnode = pBacklogs->GetRootNode();
+
+    if (rootnode == NULL ) return;
+
+    rootrule = rootnode->GetRule();
+    plugin_id = rootrule->plugin_id;
+
+
+
+	itr = mapBacklogs.find(plugin_id);
+	if(itr != mapBacklogs.end())
+	{
+        /* 查找结果是std::list */
+		blist = itr->second;
+		blist->lstBacklogs.push_back(pBacklogs);
+	}
+	else
+	{
+	    blist = new BacklogsList();
+	    blist->lstBacklogs.push_back(pBacklogs);
+	    mapBacklogs.insert(pair<int, BacklogsList*>(plugin_id, blist));
+	}
+}
 
 void Correlation::DoCorrelation(Event event)
 {
 
-    printf("DoCorrelation\n");
+ //   printf("DoCorrelation\n");
     //MatchBacklogs(event);
     MatchBacklogs(event);
 
@@ -1048,16 +1208,17 @@ void Correlation::MatchBacklogs(Event event)
     TreeNode * currentnode;
 
     Backlogs  *pBacklogs;
-    //for (it = vecBacklogs.begin(); it!=vecBacklogs.end(); it++)
+
     it = vecBacklogs.begin();
     while(it != vecBacklogs.end())
     {
-        //cout <<*it <<" ";
-        //if (!it)
-        //Backlogs *backlog = (Backlogs*)it;
-        //it->m_d = 0;
-        //pBacklogs = (Backlogs*)it;
         pBacklogs = *it;
+
+        if (pBacklogs->IsDataEmpty())
+        {
+            it++;
+            continue;
+        }
 
         if (pBacklogs->IsTimeout() || pBacklogs->IsMatched())
         {
@@ -1083,6 +1244,10 @@ void Correlation::MatchBacklogs(Event event)
             pBacklogs->UpdateFirstLastTs(event);
 
 
+            // L375
+            event.rule_matched = true;
+            event.directive_matched = true;
+
             // L217 如果当前节点是叶子节点，sim_directive_backlog_set_deleted (backlog, TRUE);
             std::vector<TreeNode*> vecTreeNode2 = currentnode->GetChildren();
             if (vecTreeNode2.empty())
@@ -1093,37 +1258,40 @@ void Correlation::MatchBacklogs(Event event)
         }
         else if (event.rule_matched)
         {
-             /* When the ocurrence is > 1 in the rule, the first call to
-         sim_directive_backlog_match_by_event (above) will return FALSE, and the event won't be
-         inserted in db. So we have to insert it here. */
+             /* When the ocurrence is > 1 in the rule, the first call to sim_directive_backlog_match_by_event (above)
+                will return FALSE, and the event won't be inserted in db. So we have to insert it here. */
 
-             // 事件没有匹配指令，但是事件已经匹配到某个规则
+             // L253 事件没有匹配指令，但是事件已经匹配到某个规则
              event.backlog_id = pBacklogs->GetBacklogsId(); // 更新时间匹配的backlog_id
              pBacklogs->UpdateFirstLastTs(event); // L265 更新backlog的firstevent 和 lastevent的时间
         }
 
         // 记录当前匹配的backlog_id到list
-        lstBacklogs.push_back(pBacklogs);
+        if (event.rule_matched) this->lstMatchedBacklogs.push_back(pBacklogs);
 
 
         // 重置事件的规则匹配状态和指令匹配状态， 进入下一循环
-        //event->rule_matched = FALSE;
-        //event->directive_matched = FALSE;
+        event.rule_matched = false;
+        event.directive_matched = false;
 
         it++;
 
     }
+
+
     return;
 }
 
 
 // L286
+// 匹配plugin_id的 = 已经匹配当前事件 + （ 匹配根规则 + 不匹配根规则）
 void Correlation::MatchDirective(Event event)
 {
-    //查找所有和事件的plugin_id匹配的所有指令
-    std::list<Backlogs *> listBacklogs;
-    std::map<int, std::list<Backlogs *>> thismap;
-    std::map<int, std::list<Backlogs *>>::iterator  itr;
+    std::list<Backlogs *> lstMatchedBacklogs; //已经匹配当前事件的所有指令
+    BacklogsList *blist;                 //当前事件plugin_id 对应的所有指令
+    std::map<int, BacklogsList*> thismap;
+    std::map<int, BacklogsList*>::iterator  itr;
+    std::map<int, BacklogsList*>::iterator  itr_any;
     std::list<Backlogs *> lstBacklogsPlugin;
     std::list<Backlogs *>::iterator it_plugin;
     std::list<Backlogs *>::iterator it;
@@ -1131,96 +1299,101 @@ void Correlation::MatchDirective(Event event)
     Rule * rootrule;
 
 
-    // 按照plugin_id来筛选backlogs
-    listBacklogs = this->lstBacklogs;
+
     bool  isEventMatchRootRule = true;
     Backlogs * pBacklog = NULL;
     Backlogs * pBacklog_plugin = NULL;
 
 
+    thismap = this->mapBacklogs;
+    lstMatchedBacklogs = this->lstMatchedBacklogs;
 	itr = thismap.find(event.plugin_id);
 	if(itr != thismap.end())
 	{
-		//std::cout<< " first "<< itr->first << " second "<<itr->second<<std::endl;
-		lstBacklogsPlugin = itr->second;
+        /* 查找结果是std::list */
+		blist = itr->second;
+
+
+        for (it_plugin= blist->lstBacklogs.begin(); it_plugin !=blist->lstBacklogs.end(); it_plugin++)
+        {
+            pBacklog_plugin = *it_plugin;
+
+            for (it = lstMatchedBacklogs.begin(); it != lstMatchedBacklogs.end(); it++)
+            {
+                //
+                pBacklog = (Backlogs *)*it;
+
+                /* 已经匹配过,不需要处理 */
+                if (pBacklog_plugin == pBacklog) return;
+            }
+
+            //@event plugin_id in @event context L312
+
+
+            // L336  检查event事件是否满足指令的时间范围
+
+
+            // 检查事件是否匹配指令的根节点规则
+            isEventMatchRootRule = pBacklog_plugin->DirectiveRootRuleMatchEvent(event);
+
+
+            /* 判断既匹配了plugin，又匹配了根指令，需要新建Backlogs数据
+
+               这种情况下，如果根规则为src IP为ANY，其他规则引用1：SRC_IP, 那么不同src IP的事件将会产生不同的backlogs
+             */
+            if (isEventMatchRootRule == true)
+            {
+                // 创建指定的 backlog 及 backlog_id, backlog默认一直存在，这里只情况数据
+                pBacklog_plugin->SetClearAllMatchData();
+
+                pBacklog_plugin->SetEmpty(false);
+
+                // 获取backlog的根节点和根规则
+                rootnode = pBacklog_plugin->GetRootNode();
+                rootrule = rootnode->GetRule();
+
+                // 设置rule_root的lasttime L362
+                //time_t        time_last = time (NULL);
+                rootrule->SetEventMatchLastTime(time (NULL));
+
+                // 更新backlog的 first_last_ts  L363
+                pBacklog_plugin->UpdateFirstLastTs(event);
+
+
+                // L368 sim_rule_set_event_data (rule_root, event);
+                // // 把事件的属性字段保存到根规则
+                rootrule->SetEventDataToRule(event);
+
+                event.rule_matched = true;
+                event.directive_matched = true;
+                /*  如果孩子节点为空，则匹配当前指令 */
+                //rootnode->GetChildren();
+            }
+        }
+
 	}
-	else
+
+	//需要查找所有plugin_id为ANY(0x7FFFFFFF)的情形
+    itr_any = thismap.find(0x7FFFFFFF); //ANY
+	if(itr_any != thismap.end())
 	{
-	    /* 没有找到 */
-		std::cout<< "not found "<<std::endl;
-		return;
+        /* 查找结果是std::list */
+		blist = itr_any->second;
 	}
-
-    for (it_plugin= lstBacklogsPlugin.begin(); it_plugin !=lstBacklogsPlugin.end(); it_plugin++)
-    {
-        pBacklog_plugin = *it;
-
-        for (it = listBacklogs.begin(); it != listBacklogs.end(); it++)
-        {
-            //
-            pBacklog = (Backlogs *)*it;
-
-            /* 已经匹配过,不需要处理 */
-            if (pBacklog_plugin == pBacklog) return;
-
-        }
-
-        // 一个事件可能查到多个对应的pBacklog_plugin,从而可能导致创建多个Backlog
-        // 没有找到，需要新建Backlogs数据
-
-        //@event plugin_id in @event context L312
-
-
-        // L336
-        // 检查event事件是否满足指令的时间范围
-
-
-        // 检查事件是否匹配指令的根节点规则
-        isEventMatchRootRule = pBacklog_plugin->DirectiveRootRuleMatchEvent(event);
-
-
-        /* 判断既匹配了plugin，又匹配了根指令，需要新建Backlogs数据 */
-        if (isEventMatchRootRule == true)
-        {
-            // 创建指定的 backlog 及 backlog_id, backlog默认一直存在，这里只情况数据
-            pBacklog_plugin->SetClearAllMatchData();
-
-            // 获取backlog的根节点和根规则
-            rootnode = pBacklog->GetRootNode();
-            rootrule = rootnode->GetRule();
-
-            // 设置rule_root的lasttime L362
-            time_t        time_last = time (NULL);
-            rootrule->SetTimeLast(time_last);
-
-            // 更新backlog的 first_last_ts  L363
-            pBacklog_plugin->UpdateFirstLastTs(event);
-
-
-            // L368 sim_rule_set_event_data (rule_root, event);
-            // // 把事件的属性字段保存到根规则
-            rootrule->SetEventDataToRule(event);
-
-            event.rule_matched = true;
-            event.directive_matched = true;
-
-            rootnode->GetChildren();
-
-        }
-    }
-
-
-    //需要查找所有plugin_id为ANY(0x7FFFFFFF)的情形
 
     return;
 }
 
 
+
+/* 只用于父节点创建 */
 TreeNode::TreeNode(TreeNode* parent)
 {
     this->parent = parent;
     if (parent == NULL)
         this->SetLevel(1);  //根节点level为1
+    else
+        this->SetLevel(parent->GetLevel()+1);
 }
 
 void TreeNode::SetLevel(size_t level)
@@ -1300,6 +1473,18 @@ IpAddress::IpAddress()
 
 }
 
+IpAddress::IpAddress(vector<int> &octetsIP)
+{
+    int num;
+    vector<int>::iterator  itr;
+    for (itr=octetsIP.begin(); itr!=octetsIP.end(); itr++)
+    {
+        num = *itr;
+        this->vecIpNum.push_back(num);
+        //printf("%d.", num);
+    }
+}
+
 IpAddress::IpAddress(IpAddress* ipa)
 {
     //增加初始化
@@ -1310,8 +1495,17 @@ IpAddress::~IpAddress()
 
 }
 
+IpAddress::IpAddress(string ip)
+{
+    stringstream sip(ip);
+    string temp;
+    this->vecIpNum.clear();
+    while (getline(sip,temp,'.'))
+        this->vecIpNum.push_back(atoi(temp.c_str()));
+}
 
-int IpAddress::GetOctetsIP(string ip, vector<int> &octetsIP) {     // Define vector<int> octets, using reference from main
+
+int GetOctetsIP(string ip, vector<int> &octetsIP) {     // Define vector<int> octets, using reference from main
     stringstream sip(ip);                               // use stringstream named ss and populate with ip
     string temp;
     octetsIP.clear();                                   // Clears the octetsMask vector, in case main function re-runs this function

@@ -20,27 +20,65 @@ Event event;
 
 int main()
 {
+    int x = 1551;
+
+    Backlogs h;
+    h.directive_id = 1001;
+    h.name = "myname";
+    h.a = &x;
+
+    //规则树节点如何 克隆？？？？
+
+
+    Backlogs m = h;
+    printf("directive_id: %d,  name:%s  0x%x   0x%x\n", m.directive_id, m.name.c_str(), &x , m.a);
+
+
     parse_text();
     cout << "Hello world!" << endl;
+    vector<int> octetsIP;
+    string strIp = "192.169.100.21";
+    vector<int>::iterator  itr;
+    int num;
+    IpAddress *srcIpa;
+    IpAddress *dstIpa;
+
+    if (GetOctetsIP(strIp, octetsIP)==0)
+    {
+        for (itr=octetsIP.begin(); itr!=octetsIP.end(); itr++)
+        {
+            num = *itr;
+            printf("%d.", num);
+        }
+        printf("\n");
+    }
+
+    //定义事件的IP
+    string srcIp = "192.169.100.21";
+    string dstIp = "192.169.100.91";
+
+    if (GetOctetsIP(srcIp, octetsIP)==0)
+    {
+        srcIpa = new IpAddress(srcIp);
+        dstIpa = new IpAddress(srcIp);
+    }
+    event.SrcIp = srcIpa;
+    event.DstIp = dstIpa;
 
 
-    backlogs = ParseDirective();
+    ParseDirective(&corre);
     PrintBacklog(backlogs);
 
-    if (backlogs->GetRootNode() == NULL) return 0;
-
-
-    //backlogs->SetCurrentRuleNode(backlogs->GetRootNode());
-
-    if (backlogs->GetCurrentRuleNode()==NULL) return 0;
-
-
-    corre.AddBacklogs(backlogs);
-
     event.plugin_sid = 18106;
+    event.plugin_id  = 7085;
     corre.DoCorrelation(event);
 
     event.plugin_sid = 18106;
+    event.plugin_id  = 7085;
+    corre.DoCorrelation(event);
+
+    event.plugin_sid = 18106;
+    event.plugin_id  = 7085;
     corre.DoCorrelation(event);
 
 
