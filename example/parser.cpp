@@ -387,7 +387,7 @@ void  ParseDirective(Correlation * corre)
         }
         directive = directive->next;
 
-        corre->AddBacklogs(backlogs);
+        corre->AddDirective(backlogs);
         PrintBacklog(backlogs);
     }
 

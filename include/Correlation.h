@@ -173,7 +173,14 @@ class Rule
         std::map<int, int> mapSrcPortNot;
         std::map<int, int> mapDstPort;
         std::map<int, int> mapDstPortNot;
-
+        std::map<string, int> mapRuleMatchSrcIpNot; //支持深拷贝
+        std::map<string, int> mapRuleMatchSrcIp;    //支持深拷贝
+        std::map<string, int> mapRuleMatchDstIpNot; //支持深拷贝
+        std::map<string, int> mapRuleMatchDstIp;    //支持深拷贝
+        //std::map<string, int> mapEventMatchSrcIpNot;//支持深拷贝
+        //std::map<string, int> mapEventMatchSrcIp;   //支持深拷贝
+        //std::map<string, int> mapEventMatchDstIpNot;//支持深拷贝
+        //std::map<string, int> mapEventMatchDstIp;   //支持深拷贝
         // 关联字段引用定义
         std::list<RuleVar*> lstRuleVar;
 
@@ -203,18 +210,21 @@ class Rule
         void SetSrcHomeNetNot(bool isEnable);
         void SetDstHomeNetNot(bool isEnable);
         void SetVarIp(IpAddress *ipaddress, RuleVar * var);
-        void SetSrcIpNot(IpAddress* ipaddress);
-        void SetSrcIp(IpAddress* ipaddress);
-        void SetDstIpNot(IpAddress* ipaddress);
-        void SetDstIp(IpAddress* ipaddress);
-        IpAddress * GetSrcIp();
-        IpAddress * GetSrcNotIp();
-        IpAddress * GetDstIp();
-        IpAddress * GetDstNotIp();
-        IpAddress * SrcIp;
-        IpAddress * DstIp;
-        IpAddress * SrcIpNot;
-        IpAddress * DstIpNot;
+        void SetEventDataSrcIpNot(IpAddress* ipaddress);
+        void SetEventDataSrcIp(IpAddress* ipaddress);
+        void SetEventDataDstIpNot(IpAddress* ipaddress);
+        void SetEventDataDstIp(IpAddress* ipaddress);
+        IpAddress * GetEventDataSrcIp();
+        IpAddress * GetEventDataSrcNotIp();
+        IpAddress * GetEventDataDstIp();
+        IpAddress * GetEventDataDstNotIp();
+        IpAddress * EventDataSrcIp;
+        IpAddress * EventDataDstIp;
+        IpAddress * EventDataSrcIpNot;
+        IpAddress * EventDataDstIpNot;
+    public:
+        std::vector<INetwork> vecNetwork;
+        std::vector<INetwork> vecNetworknot;
     public:
         bool MatchSrcHost(Event event);
         bool MatchSrcHostNot(Event event);
@@ -270,11 +280,13 @@ class Correlation
     public:
         Correlation();
         void AddBacklogs(Backlogs* pBacklogs);
+        void AddDirective(Backlogs* pBacklogs);
         virtual ~Correlation();
         void DoCorrelation(Event event);
         void MatchBacklogs(Event event);
         void MatchDirective(Event event);
-        std::vector<Backlogs*> vecBacklogs;
+        std::vector<Backlogs*> vecBacklogs;  //Backlogs数据
+        std::vector<Backlogs*> vecDirective; //指令数据
     protected:
 
     private:
@@ -355,6 +367,8 @@ class RuleVar {
 
 int GetOctetsIP(string ip, vector<int> &octetsIP);
 
+
+/* 特定IP地址 */
 class IpAddress {
     public:
         IpAddress();
@@ -364,13 +378,20 @@ class IpAddress {
         virtual ~IpAddress();
         vector<int> vecIpNum;
         bool isAnyMatch;
+        map<string, int> mapRuleMatchSrcIp; //for test
+        string GetIpString();
 };
 
 class INetwork {
     public:
         INetwork();
+        INetwork(string network);
+        INetwork(string networkip, int masknum);
         virtual ~INetwork();
-
+        string  network;
+        vector<int> vecIpNum;
+        int   masknum;
+        bool IsIpMatched(IpAddress ipa);
 };
 
 #endif // CORRELATION_H

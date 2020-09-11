@@ -374,11 +374,11 @@ void Backlogs::SetRuleRefVars(TreeNode * node)
         {
             /* from="1:SRC_IP" */
             case SIM_RULE_VAR_SRC_IA:
-                ipa = pRuleUp->GetSrcIp();
+                ipa = pRuleUp->GetEventDataSrcIp();
                 pRule->SetVarIp(ipa, ruleVar);
                 break;
             case SIM_RULE_VAR_DST_IA:
-                ipa = pRuleUp->GetDstIp();
+                ipa = pRuleUp->GetEventDataDstIp();
                 pRule->SetVarIp(ipa, ruleVar);
                 break;
             case SIM_RULE_VAR_SRC_PORT:
@@ -554,11 +554,11 @@ bool Rule::MatchEventOccurence(Event event)
             this->SetEventMatchLastTime(time(NULL));
         if (this->occurrence != this->mEventMatchCount)
         {
-            this->mEventMatchCount++; // 加1
+            this->mEventMatchCount++;
         }
         else
         {
-            this->mEventMatchCount = 1;   //
+            this->mEventMatchCount = 1;
         }
     }
     else
@@ -574,8 +574,8 @@ void Rule::SetEventDataToRule(Event event)
 
     /* L5046 */
     //this->Sets
-    this->SetSrcIp(event.SrcIp);
-    this->SetDstIp(event.DstIp);
+    this->SetEventDataSrcIp(event.SrcIp);
+    this->SetEventDataDstIp(event.DstIp);
     //5055
 
     return;
@@ -655,22 +655,22 @@ void Rule::SetVarIp(IpAddress *ipa, RuleVar * var)
     {
         if (var->negated)
         {
-            this->SetSrcIpNot(ipa);
+            this->SetEventDataSrcIpNot(ipa);
         }
         else
         {
-            this->SetSrcIp(ipa);
+            this->SetEventDataSrcIp(ipa);
         }
     }
     else if (var->attr == SIM_RULE_VAR_DST_IA)
     {
         if (var->negated)
         {
-            this->SetDstIpNot(ipa);
+            this->SetEventDataDstIpNot(ipa);
         }
         else
         {
-            this->SetDstIp(ipa);
+            this->SetEventDataDstIp(ipa);
         }
     }
 }
@@ -682,32 +682,32 @@ void Rule::SetVarIp(IpAddress *ipa, RuleVar * var)
 （2）匹配的事件的数据，直接保存到对应的sim_rule_set_event_data
 （3）匹配规则的孩子节点，把引用更新到实际数据list    sim_directive_set_rule_vars
  */
-void Rule::SetSrcIpNot(IpAddress* ipaddress)
+void Rule::SetEventDataSrcIpNot(IpAddress* ipaddress)
 {
-    if (this->SrcIpNot) delete this->SrcIpNot;
-    this->SrcIpNot = NULL;
-    if (ipaddress) this->SrcIpNot = new IpAddress(ipaddress);
+    if (this->EventDataSrcIpNot) delete this->EventDataSrcIpNot;
+    this->EventDataSrcIpNot = NULL;
+    if (ipaddress) this->EventDataSrcIpNot = new IpAddress(ipaddress);
 }
 
-void Rule::SetSrcIp(IpAddress* ipaddress)
+void Rule::SetEventDataSrcIp(IpAddress* ipaddress)
 {
-    if (this->SrcIp) delete this->SrcIp;
-    this->SrcIp = NULL;
-    if (ipaddress) this->SrcIp = new IpAddress(ipaddress);
+    if (this->EventDataSrcIp) delete this->EventDataSrcIp;
+    this->EventDataSrcIp = NULL;
+    if (ipaddress) this->EventDataSrcIp = new IpAddress(ipaddress);
 }
 
-void Rule::SetDstIpNot(IpAddress* ipaddress)
+void Rule::SetEventDataDstIpNot(IpAddress* ipaddress)
 {
-    if (this->DstIpNot) delete this->DstIpNot;
-    this->DstIpNot = NULL;
-    if (ipaddress) this->DstIpNot = new IpAddress(ipaddress);
+    if (this->EventDataDstIpNot) delete this->EventDataDstIpNot;
+    this->EventDataDstIpNot = NULL;
+    if (ipaddress) this->EventDataDstIpNot = new IpAddress(ipaddress);
 }
 
-void Rule::SetDstIp(IpAddress* ipaddress)
+void Rule::SetEventDataDstIp(IpAddress* ipaddress)
 {
-    if (this->DstIp) delete this->DstIp;
-    this->DstIp = NULL;
-    if (ipaddress) this->DstIp = new IpAddress(ipaddress);
+    if (this->EventDataDstIp) delete this->EventDataDstIp;
+    this->EventDataDstIp = NULL;
+    if (ipaddress) this->EventDataDstIp = new IpAddress(ipaddress);
 }
 
 Rule& Rule::operator=(Rule& rule)
@@ -725,24 +725,24 @@ Rule& Rule::operator=(Rule& rule)
 }
 
 
-IpAddress * Rule::GetSrcIp()
+IpAddress * Rule::GetEventDataSrcIp()
 {
-    return this->SrcIp;
+    return this->EventDataSrcIp;
 }
 
-IpAddress * Rule::GetSrcNotIp()
+IpAddress * Rule::GetEventDataSrcNotIp()
 {
-    return this->SrcIpNot;
+    return this->EventDataSrcIpNot;
 }
 
-IpAddress * Rule::GetDstIp()
+IpAddress * Rule::GetEventDataDstIp()
 {
-    return this->DstIp;
+    return this->EventDataDstIp;
 }
 
-IpAddress * Rule::GetDstNotIp()
+IpAddress * Rule::GetEventDataDstNotIp()
 {
-    return this->DstIpNot;
+    return this->EventDataDstIpNot;
 }
 
 /* 保存定义的RefRuleVar到list */
@@ -891,10 +891,11 @@ void Rule::SetRuleIp(char* ipstring, bool is_sourceip)
             token_value = b;
         }
 
-        string::size_type  pos2, pos3, pos4;
+        string::size_type  pos2, pos3, pos4, pos5;
         pos2 = token_value.find(":");
         pos3 = token_value.find(SIM_SRC_IP_CONST);
         pos4 = token_value.find(SIM_DST_IP_CONST);
+        pos5 = token_value.find("/");
 
         if ((pos2 !=  token_value.npos) && (pos3 !=  token_value.npos || pos4 !=  token_value.npos))
         {
@@ -951,8 +952,25 @@ void Rule::SetRuleIp(char* ipstring, bool is_sourceip)
         }
         else
         {
-            // OSSIM这里判断是特定IP，比如 !192.168.8.3 ,或者 资产名称
-            // 暂不需要
+
+            // OSSIM这里判断是特定IP，比如 !192.168.8.3 ,或者 资产名称 暂不需要
+            // 判断是否子网 192.168.2.1/24
+            if ((pos5 !=  token_value.npos))
+            {
+                string ip         = token_value.substr(0, pos5);
+                string maskstring = token_value.substr(pos5, token_value.size());
+                int masknum = stoi(maskstring.c_str(), 0, 10); //校验，是否是整数
+                INetwork network(maskstring, masknum);
+                if (ip_neg)
+                {
+                    this->vecNetworknot.push_back(network);
+                }
+                else
+                {
+                    this->vecNetwork.push_back(network);
+                }
+
+            }
 
         }
     }
@@ -995,10 +1013,10 @@ void Rule::SetDstHomeNetNot(bool isEnable)
 /* L5492 */
 bool Rule::MatchSrcIp(Event event)
 {
-    if (this->SrcIp->vecIpNum[0]==event.SrcIp->vecIpNum[0] &&
-        this->SrcIp->vecIpNum[1]==event.SrcIp->vecIpNum[1] &&
-        this->SrcIp->vecIpNum[2]==event.SrcIp->vecIpNum[2] &&
-        this->SrcIp->vecIpNum[3]==event.SrcIp->vecIpNum[3])
+    if (this->EventDataSrcIp->vecIpNum[0]==event.SrcIp->vecIpNum[0] &&
+        this->EventDataSrcIp->vecIpNum[1]==event.SrcIp->vecIpNum[1] &&
+        this->EventDataSrcIp->vecIpNum[2]==event.SrcIp->vecIpNum[2] &&
+        this->EventDataSrcIp->vecIpNum[3]==event.SrcIp->vecIpNum[3])
             return true;
     else
         return false;
@@ -1031,10 +1049,10 @@ bool Rule::MatchSrcIp(Event event)
 
 bool Rule::MatchDstIp(Event event)
 {
-    if (this->SrcIp->vecIpNum[0]==event.SrcIp->vecIpNum[0] &&
-        this->SrcIp->vecIpNum[1]==event.SrcIp->vecIpNum[1] &&
-        this->SrcIp->vecIpNum[2]==event.SrcIp->vecIpNum[2] &&
-        this->SrcIp->vecIpNum[3]==event.SrcIp->vecIpNum[3])
+    if (this->EventDataDstIp->vecIpNum[0]==event.DstIp->vecIpNum[0] &&
+        this->EventDataDstIp->vecIpNum[1]==event.DstIp->vecIpNum[1] &&
+        this->EventDataDstIp->vecIpNum[2]==event.DstIp->vecIpNum[2] &&
+        this->EventDataDstIp->vecIpNum[3]==event.DstIp->vecIpNum[3])
             return true;
     else
         return false;
@@ -1129,7 +1147,6 @@ void Rule::SetRulePluginSid(char* portstring)
     {
         this->AddPluginSid(atoi(temp.c_str()));
     }
-
 }
 
 Correlation::Correlation()
@@ -1140,6 +1157,11 @@ Correlation::Correlation()
 Correlation::~Correlation()
 {
     //dtor
+}
+
+void Correlation::AddDirective(Backlogs* pBacklogs)
+{
+
 }
 
 void Correlation::AddBacklogs(Backlogs* pBacklogs)
@@ -1275,9 +1297,7 @@ void Correlation::MatchBacklogs(Event event)
         event.directive_matched = false;
 
         it++;
-
     }
-
 
     return;
 }
@@ -1480,7 +1500,7 @@ IpAddress::IpAddress(vector<int> &octetsIP)
     for (itr=octetsIP.begin(); itr!=octetsIP.end(); itr++)
     {
         num = *itr;
-        this->vecIpNum.push_back(num);
+        this->vecIpNum.push_back(num&0xFF);
         //printf("%d.", num);
     }
 }
@@ -1504,31 +1524,95 @@ IpAddress::IpAddress(string ip)
         this->vecIpNum.push_back(atoi(temp.c_str()));
 }
 
+string IpAddress::GetIpString()
+{
+    if (this->vecIpNum.size() == 4)
+    {
+        stringstream ss;
+        ss.clear();
+        ss<<vecIpNum[0]<<"."<<vecIpNum[1]<<"."<<vecIpNum[2]<<"."<<vecIpNum[3];
+        string s=ss.str();
+        return s;
+    }
+    else
+    {
+        string s = "";
+        return s;
+    }
+}
 
 int GetOctetsIP(string ip, vector<int> &octetsIP) {     // Define vector<int> octets, using reference from main
-    stringstream sip(ip);                               // use stringstream named ss and populate with ip
+    stringstream sip(ip);
     string temp;
-    octetsIP.clear();                                   // Clears the octetsMask vector, in case main function re-runs this function
+    octetsIP.clear();
     vector<bool> ipInRange;
-    while (getline(sip,temp,'.'))                       // Every time getline recieves new stream element from ss, save to temp
-        octetsIP.push_back(atoi(temp.c_str()));         //... until reaches '.' delimiter, then push_back octet with new element.
+    while (getline(sip,temp,'.'))
+        octetsIP.push_back(atoi(temp.c_str()));
     if (octetsIP.size() == 4) {
-        for(int i = 0; i < 4; i++){
+        for(int i = 0; i < 4; i++)
+        {
             if (octetsIP[i] >= 0 && octetsIP[i] <= 255)
                 ipInRange.push_back(true);
             else
                 ipInRange.push_back(false);
         }
-        if (ipInRange[0]==true&&ipInRange[1]==true&&ipInRange[2]==true&&ipInRange[3]==true){
+        if (ipInRange[0]==true&&ipInRange[1]==true&&ipInRange[2]==true&&ipInRange[3]==true)
+        {
             return 0;
-        }else{
+        }
+        else
+        {
             cout << endl << "There are only 255 bits per octet. Please re-enter IP." << endl << endl;
             return 1;
         }
-    }else{
+    }
+    else
+    {
         cout << endl << "Please enter four octets in dot notation." << endl << endl;
         return 1;
     }
+}
+
+INetwork::INetwork()
+{
+
+}
+
+INetwork::INetwork(string network)
+{
+
+}
+
+INetwork::INetwork(string networkip, int masknum)
+{
+    stringstream sip(networkip);
+    string temp;
+    this->vecIpNum.clear();
+
+    while (getline(sip,temp,'.'))
+        this->vecIpNum.push_back(0xFF & atoi(temp.c_str()));
+
+    if (this->vecIpNum.size() == 4)
+    {
+    }
+    else
+    {
+        this->vecIpNum.push_back(0);
+        this->vecIpNum.push_back(0);
+        this->vecIpNum.push_back(0);
+        this->vecIpNum.push_back(0);
+    }
+}
+
+bool INetwork::IsIpMatched(IpAddress ipa)
+{
+    return false;
+
+}
+
+INetwork::~INetwork()
+{
+
 }
 
 

@@ -1,5 +1,6 @@
 #include "Correlation.h"
 #include <iostream>
+#include <sstream>
 #include "cJSON.h"
 #include "parser.h"
 #include <stdio.h>
@@ -17,18 +18,56 @@ Event event;
 3. directive解析
 */
 
+void maptest()
+{
+    int num;
+    IpAddress ipa("192.168.9.120");
+    ipa.mapRuleMatchSrcIp.insert(pair<string, int>("aaa", 1));
+    ipa.mapRuleMatchSrcIp.insert(pair<string, int>("bbb", 2));
+    IpAddress ipb = ipa;
+    vector<int>::iterator  itc;
+    for (itc= ipb.vecIpNum.begin(); itc!=ipb.vecIpNum.end(); itc++)
+    {
+        num = *itc;
+            printf("%d.", num);
+    }
+    std::map<string, int>::iterator it;
+    std::map<string, int>::iterator itEnd;
+    it = ipa.mapRuleMatchSrcIp.begin();
+    itEnd = ipa.mapRuleMatchSrcIp.end();
+    while (it != itEnd) {
+      cout<<it->first<<' '<<it->second<<endl;
+      it++;
+   }
+}
+
+void sstest()
+{
+    stringstream ss;
+    ss.clear();
+    ss<<14<<"."<<17<<"."<<19<<"."<<20;
+
+    string s=ss.str();
+
+    cout<<s<<endl;
+    cout<<"ffff"<<endl;
+}
 
 int main()
 {
     int x = 1551;
-
+    int num;
     Backlogs h;
     h.directive_id = 1001;
     h.name = "myname";
     h.a = &x;
 
     //规则树节点如何 克隆？？？？
+    maptest();
+    sstest();
 
+
+    printf("\n--------------\n");
 
     Backlogs m = h;
     printf("directive_id: %d,  name:%s  0x%x   0x%x\n", m.directive_id, m.name.c_str(), &x , m.a);
@@ -39,7 +78,7 @@ int main()
     vector<int> octetsIP;
     string strIp = "192.169.100.21";
     vector<int>::iterator  itr;
-    int num;
+
     IpAddress *srcIpa;
     IpAddress *dstIpa;
 
