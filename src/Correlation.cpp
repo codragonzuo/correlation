@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 using namespace std;
 
 
@@ -100,6 +99,7 @@ Event::~Event()
     //dtor
 }
 
+
 BacklogsList::BacklogsList()
 {
     //ctor
@@ -116,7 +116,7 @@ Backlogs::Backlogs()
 {
     /* 设置初始值 */
     matched = false;
-    this->SetEmpty(true);
+    //this->SetEmpty(true);
     //ctor
 }
 
@@ -126,12 +126,12 @@ Backlogs::~Backlogs()
 }
 
 
-
+/*
 int Backlogs::GetBacklogsId()
 {
     return this->backlog_id;
 }
-
+*/
 bool Backlogs::IsMatched()
 {
     if (matched)
@@ -171,7 +171,7 @@ bool Backlogs::MatchEvent(Event event)
     //TreeNode * currentnode;
     bool  isMatchRule;
     Rule * currentRule = NULL;
-    if (CurrentNode != NULL)
+    if (this->CurrentNode != NULL)
         currentRule = CurrentNode->GetRule();
 
     if (currentRule == NULL) return false;
@@ -467,30 +467,88 @@ void Backlogs::SetClearAllMatchData()
     return;
 }
 
-void Backlogs::Clear()
-{
-    this->SetEmpty(false);
-}
+//void Backlogs::Clear()
+//{
+    //this->SetEmpty(false);
+//}
 
-bool Backlogs::IsDataEmpty()
-{
-    return this->isEmpty;
-}
+//bool Backlogs::IsDataEmpty()
+//{
+//    return this->isEmpty;
+//}
 
-void Backlogs::SetEmpty(bool isEmpty)
-{
-    this->isEmpty = isEmpty;
-}
+//void Backlogs::SetEmpty(bool isEmpty)
+//{
+//    this->isEmpty = isEmpty;
+//}
 
 TreeNode* Backlogs::GetRootNode()
 {
     return this->Rootnode;
 }
 
+Backlogs * Backlogs::clone()
+{
+    Backlogs * pBacklogs = new Backlogs();
+    pBacklogs->directive_id = this->directive_id;
+    pBacklogs->name = this->name;
+    pBacklogs->first_event = this->first_event;
+    pBacklogs->priority = this->priority;
+
+    //创建根节点
+    TreeNode * rulenode = new TreeNode(NULL);
+    pBacklogs->SetRootNode(rulenode);
+
+    printf("Backlog::clone\n");
+    /* 遍历拷贝 */
+    this->RecurseNodeCopy(pBacklogs->GetRootNode(), this->GetRootNode());
+
+
+    /* 私有成员变量需要 */
+    return pBacklogs;
+
+}
+
+
+void Backlogs::RecurseNodeCopy(TreeNode * dst_node, TreeNode * src_node)
+{
+    Rule * newrule;
+    TreeNode * newnode;
+    TreeNode* childnode;
+	if (src_node!= NULL && dst_node != NULL)
+	{
+		//当前节点
+		newrule = new Rule();
+        * newrule = *(src_node->GetRule()); //赋值拷贝，支持深拷贝
+
+        dst_node->SetRule(newrule);
+        printf("level %d : node 0x%x   occurence:%d\n", dst_node->GetLevel() , dst_node, newrule->occurrence);
+
+        //孩子节点
+        std::vector<TreeNode*> vecTreeNode = src_node->GetChildren();
+        vector<TreeNode*>::iterator it;
+        it = vecTreeNode.begin();
+        printf("vector number=%d\n", vecTreeNode.size());
+        while(it != vecTreeNode.end())
+        {
+            childnode = *it;
+            newnode =  dst_node->AddChild();
+            //RecurseTree(childnode);
+            RecurseNodeCopy(newnode, childnode);
+            it++;
+        }
+	}
+}
+
 Rule::Rule()
 {
     this->mRuleTimeOut = 0;
     this->mEventMatchCount = 0;
+    this->EventDataSrcIp = NULL;
+    this->EventDataDstIp = NULL;
+
+    this->EventDataSrcIpNot = NULL;
+    this->EventDataDstIpNot = NULL;
 }
 Rule::~Rule()
 {
@@ -499,7 +557,7 @@ Rule::~Rule()
 
 bool Rule::MatchEvent(Event event)
 {
-    bool matched = false;
+    bool matched = true;
     //if (event.plugin_sid == this->plugin_sid)
     //{
     //    matched = true;
@@ -519,11 +577,12 @@ bool Rule::MatchEvent(Event event)
     */
 
     // L4985 occurrence匹配
-    if (this->occurrence)
+    this->mEventMatchCount ++;
+    if (this->occurrence>1)
     {
         if (this->occurrence != this->mEventMatchCount)
         {
-            this->mEventMatchCount ++;
+            //this->mEventMatchCount ++;
             event.count = this->mEventMatchCount -1;
             matched = false;
             return false;
@@ -531,14 +590,17 @@ bool Rule::MatchEvent(Event event)
         else
         {
             event.count = this->occurrence;
-            this->mEventMatchCount = 1;
-
+            //this->mEventMatchCount = 1;
+            printf("rule occurence = %d  eventmatchcount=%d  matched\n", this->occurrence, this->mEventMatchCount);
         }
     }
     else
     {
         event.count = 1;
+        printf("rule occurence = %d  eventmatchcount=%d  matched\n", this->occurrence, this->mEventMatchCount);
     }
+
+
 
     event.rule_matched = true;
 
@@ -710,7 +772,7 @@ void Rule::SetEventDataDstIp(IpAddress* ipaddress)
     if (ipaddress) this->EventDataDstIp = new IpAddress(ipaddress);
 }
 
-Rule& Rule::operator=(Rule& rule)
+/*Rule& Rule::operator=(Rule& rule)
 {
     //释放堆内存
 
@@ -722,7 +784,7 @@ Rule& Rule::operator=(Rule& rule)
 
     //list, vec, map处理
     return *this;
-}
+}*/
 
 
 IpAddress * Rule::GetEventDataSrcIp()
@@ -1161,19 +1223,61 @@ Correlation::~Correlation()
 
 void Correlation::AddDirective(Backlogs* pBacklogs)
 {
+    if (pBacklogs == NULL) return;
+    this->vecDirective.push_back(pBacklogs);
+    /* 加入当前backlogs到MAP表里 */
+    this->AddDirectiveMapItem(pBacklogs);
+}
 
+
+
+void Correlation::DestoryDirective(Backlogs* pBacklogs)
+{
+    vector<Backlogs*>::iterator  it;
+    Backlogs* backlogs;
+    for (it=this->vecDirective.begin(); it!=this->vecDirective.end(); it++)
+    {
+        backlogs = *it;
+        if (pBacklogs == backlogs)
+        {
+            this->vecDirective.erase(it);
+            this->RemoveDirectiveMapItem(pBacklogs);
+            //backlogs->Clear();
+            delete backlogs;
+            break;
+        }
+        it++;
+    }
 }
 
 void Correlation::AddBacklogs(Backlogs* pBacklogs)
 {
     if (pBacklogs == NULL) return;
     this->vecBacklogs.push_back(pBacklogs);
-
-    /* 加入当前backlogs到MAP表里 */
-    this->AddBacklogsMap(pBacklogs);
 }
 
-void Correlation::AddBacklogsMap(Backlogs* pBacklogs)
+void Correlation::DestoryBacklogs(Backlogs* pBacklogs)
+{
+    vector<Backlogs*>::iterator  it;
+    Backlogs* backlogs;
+    for (it=this->vecBacklogs.begin(); it!=this->vecBacklogs.end(); it++)
+    {
+        backlogs = *it;
+        if (pBacklogs == backlogs)
+        {
+            this->vecBacklogs.erase(it);
+            //this->RemoveDirectiveMapItem(pBacklogs);
+            //backlogs->Clear();
+            delete backlogs;
+            break;
+        }
+        it++;
+    }
+}
+
+
+//加入 blacklog_id魏Key值的map表
+void Correlation::AddDirectiveMapItem(Backlogs* pBacklogs)
 {
     BacklogsList  *blist;
     std::map<int, BacklogsList *> thismap;
@@ -1196,8 +1300,8 @@ void Correlation::AddBacklogsMap(Backlogs* pBacklogs)
 
 
 
-	itr = mapBacklogs.find(plugin_id);
-	if(itr != mapBacklogs.end())
+	itr = mapDirective.find(plugin_id);
+	if(itr != mapDirective.end())
 	{
         /* 查找结果是std::list */
 		blist = itr->second;
@@ -1207,15 +1311,49 @@ void Correlation::AddBacklogsMap(Backlogs* pBacklogs)
 	{
 	    blist = new BacklogsList();
 	    blist->lstBacklogs.push_back(pBacklogs);
-	    mapBacklogs.insert(pair<int, BacklogsList*>(plugin_id, blist));
+	    mapDirective.insert(pair<int, BacklogsList*>(plugin_id, blist));
+	}
+}
+
+void Correlation::RemoveDirectiveMapItem(Backlogs* pBacklogs)
+{
+    BacklogsList  *blist;
+    std::map<int, BacklogsList *> thismap;
+    std::map<int, BacklogsList *>::iterator  itr;
+    std::list<Backlogs *> lstBacklogsPlugin;
+    std::list<Backlogs *>::iterator it_plugin;
+    std::list<Backlogs *>::iterator it;
+    TreeNode * rootnode;
+    Rule * rootrule;
+    int plugin_id;
+
+    if (pBacklogs == NULL) return;
+
+    rootnode = pBacklogs->GetRootNode();
+
+    if (rootnode == NULL ) return;
+
+    rootrule = rootnode->GetRule();
+    plugin_id = rootrule->plugin_id;
+
+
+
+	itr = mapDirective.find(plugin_id);
+	if(itr != mapDirective.end())
+	{
+        /* 查找结果是std::list */
+		blist = itr->second;
+		blist->lstBacklogs.push_back(pBacklogs);
+	}
+	else
+	{
+        /* 没有查找到 */
 	}
 }
 
 void Correlation::DoCorrelation(Event event)
 {
 
- //   printf("DoCorrelation\n");
-    //MatchBacklogs(event);
     MatchBacklogs(event);
 
     MatchDirective(event);
@@ -1231,21 +1369,23 @@ void Correlation::MatchBacklogs(Event event)
 
     Backlogs  *pBacklogs;
 
+    /* 清空列表元素 */
+    this->lstMatchedBacklogs.clear();
+
     it = vecBacklogs.begin();
     while(it != vecBacklogs.end())
     {
         pBacklogs = *it;
 
-        if (pBacklogs->IsDataEmpty())
-        {
-            it++;
-            continue;
-        }
 
         if (pBacklogs->IsTimeout() || pBacklogs->IsMatched())
         {
-          //删除Backlogs
-            pBacklogs->Clear();
+
+            this->vecBacklogs.erase(it);
+            delete pBacklogs;
+            printf("backlogs Timeout!\n");
+            //it++;
+            continue;
         }
 
         //sim_directive_backlog_match_by_event
@@ -1274,9 +1414,12 @@ void Correlation::MatchBacklogs(Event event)
             std::vector<TreeNode*> vecTreeNode2 = currentnode->GetChildren();
             if (vecTreeNode2.empty())
             {
-                pBacklogs->Clear();
+                this->vecBacklogs.erase(it);
+                delete pBacklogs;
+                //这里不能it++，vector删除元素后会自动调整位置和长度
+                printf("backlogs Matched!\n");
+                continue;
             }
-
         }
         else if (event.rule_matched)
         {
@@ -1284,13 +1427,15 @@ void Correlation::MatchBacklogs(Event event)
                 will return FALSE, and the event won't be inserted in db. So we have to insert it here. */
 
              // L253 事件没有匹配指令，但是事件已经匹配到某个规则
-             event.backlog_id = pBacklogs->GetBacklogsId(); // 更新时间匹配的backlog_id
+             //event.backlog_id = pBacklogs->GetBacklogsId(); // 更新时间匹配的backlog_id
              pBacklogs->UpdateFirstLastTs(event); // L265 更新backlog的firstevent 和 lastevent的时间
         }
 
         // 记录当前匹配的backlog_id到list
-        if (event.rule_matched) this->lstMatchedBacklogs.push_back(pBacklogs);
-
+        if (event.rule_matched)
+        {
+            this->lstMatchedBacklogs.push_back(pBacklogs);
+        }
 
         // 重置事件的规则匹配状态和指令匹配状态， 进入下一循环
         event.rule_matched = false;
@@ -1318,14 +1463,12 @@ void Correlation::MatchDirective(Event event)
     TreeNode *rootnode;
     Rule * rootrule;
 
-
-
     bool  isEventMatchRootRule = true;
     Backlogs * pBacklog = NULL;
     Backlogs * pBacklog_plugin = NULL;
 
 
-    thismap = this->mapBacklogs;
+    thismap = this->mapDirective;
     lstMatchedBacklogs = this->lstMatchedBacklogs;
 	itr = thismap.find(event.plugin_id);
 	if(itr != thismap.end())
@@ -1344,7 +1487,7 @@ void Correlation::MatchDirective(Event event)
                 pBacklog = (Backlogs *)*it;
 
                 /* 已经匹配过,不需要处理 */
-                if (pBacklog_plugin == pBacklog) return;
+                if (pBacklog_plugin->directive_id == pBacklog->directive_id) return;
             }
 
             //@event plugin_id in @event context L312
@@ -1361,23 +1504,29 @@ void Correlation::MatchDirective(Event event)
 
                这种情况下，如果根规则为src IP为ANY，其他规则引用1：SRC_IP, 那么不同src IP的事件将会产生不同的backlogs
              */
+            Backlogs * pNewBacklogs = pBacklog_plugin->clone();
+
+            this->AddBacklogs(pNewBacklogs);
+
             if (isEventMatchRootRule == true)
             {
                 // 创建指定的 backlog 及 backlog_id, backlog默认一直存在，这里只情况数据
-                pBacklog_plugin->SetClearAllMatchData();
+                // pNewBacklogs->SetClearAllMatchData();
 
-                pBacklog_plugin->SetEmpty(false);
+                // pNewBacklogs->SetEmpty(false);
 
                 // 获取backlog的根节点和根规则
-                rootnode = pBacklog_plugin->GetRootNode();
+                rootnode = pNewBacklogs->GetRootNode();
                 rootrule = rootnode->GetRule();
+
+                pNewBacklogs->SetCurrentRuleNode(rootnode);
 
                 // 设置rule_root的lasttime L362
                 //time_t        time_last = time (NULL);
                 rootrule->SetEventMatchLastTime(time (NULL));
 
                 // 更新backlog的 first_last_ts  L363
-                pBacklog_plugin->UpdateFirstLastTs(event);
+                pNewBacklogs->UpdateFirstLastTs(event);
 
 
                 // L368 sim_rule_set_event_data (rule_root, event);

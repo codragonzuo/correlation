@@ -118,14 +118,14 @@ class Backlogs
         //void SetRootNode(TreeNode * node);
         void SetRootNode(TreeNode* rootnode);
         void SetClearAllMatchData();
-        void Clear();
-        bool IsDataEmpty();
-        void SetEmpty(bool isEmpty);
+        //void Clear();
+        //bool IsDataEmpty();
+        //void SetEmpty(bool isEmpty);
 
 
         void SetMatched(bool matched);
         bool IsMatched();
-        int backlog_id;
+        //int backlog_id;
         int GetBacklogsId();
 
     public:
@@ -135,6 +135,10 @@ class Backlogs
         int priority;
         time_t first_event;
         time_t last_event;
+
+    public:
+        Backlogs * clone();
+        void RecurseNodeCopy(TreeNode * dst_node, TreeNode * src_node);
 
     protected:
         TreeNode* Rootnode;
@@ -257,7 +261,7 @@ class Rule
         time_t  mEventLastMatchTime;
         int     mEventMatchCount;
     public:
-        Rule& operator=(Rule& rule);
+    //    Rule& operator=(Rule& rule);
 
 };
 
@@ -275,12 +279,22 @@ class Correlation
 {
     public:
         std::list<Backlogs *> lstMatchedBacklogs;
-        std::map<int, BacklogsList*> mapBacklogs; /* 建立以plugin_id为Key索引，存储plugin_id的 listbacklogs */
+        std::map<int, BacklogsList*> mapDirective; /* 建立以plugin_id为Key索引，存储plugin_id的 listbacklogs */
 
     public:
         Correlation();
+        /* 增加Backlogs */
         void AddBacklogs(Backlogs* pBacklogs);
+
+        /* 销毁Backlogs */
+        void DestoryBacklogs(Backlogs* pBacklogs);
+
+
         void AddDirective(Backlogs* pBacklogs);
+
+        /* 销毁Directive */
+        void DestoryDirective(Backlogs* pBacklogs);
+
         virtual ~Correlation();
         void DoCorrelation(Event event);
         void MatchBacklogs(Event event);
@@ -290,7 +304,8 @@ class Correlation
     protected:
 
     private:
-        void AddBacklogsMap(Backlogs* pBacklogs);
+        void AddDirectiveMapItem(Backlogs* pBacklogs);
+        void RemoveDirectiveMapItem(Backlogs* pBacklogs);
 };
 
 
