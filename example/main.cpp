@@ -109,7 +109,7 @@ int main()
     PrintBacklog(backlogs);
 
     num=1;
-    for (num = 0; num<2271; num++)
+    for (num = 1; num<2271; num++)
     {
         printf("%d event\n", num);
         event.plugin_sid = 18106;

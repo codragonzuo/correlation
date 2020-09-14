@@ -91,14 +91,17 @@ int  xmltest()
 
 Event::Event()
 {
-    //ctor
+
 }
 
 Event::~Event()
 {
-    //dtor
+
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Class Backlogs
+///////////////////////////////////////////////////////////////////////////////
 
 BacklogsList::BacklogsList()
 {
@@ -114,17 +117,42 @@ BacklogsList::~BacklogsList()
 
 Backlogs::Backlogs()
 {
-    /* 设置初始值 */
     matched = false;
-    //this->SetEmpty(true);
-    //ctor
 }
 
 Backlogs::~Backlogs()
 {
-    //dtor
+    TreeNode* rootnode;
+    this->RecurseDestoryNode(this->Rootnode);
 }
 
+
+void Backlogs::RecurseDestoryNode(TreeNode * dst_node)
+{
+    Rule * rule;
+    TreeNode * newnode;
+    TreeNode* childnode;
+	if (dst_node != NULL)
+	{
+		//当前节点
+        rule = dst_node->GetRule();
+
+        //  遍历孩子节点
+        std::vector<TreeNode*> vecTreeNode = dst_node->GetChildren();
+        vector<TreeNode*>::iterator it;
+        it = vecTreeNode.begin();
+        printf("vector number=%d\n", vecTreeNode.size());
+        while(it != vecTreeNode.end())
+        {
+            childnode = *it;
+            RecurseDestoryNode(childnode);
+            it++;
+        }
+        printf("delete node=0x%x rule=0x%x occurence=%d\n", dst_node, rule, rule->occurrence);
+        delete rule;
+        delete dst_node;
+	}
+}
 
 /*
 int Backlogs::GetBacklogsId()
@@ -154,7 +182,11 @@ bool Backlogs::IsTimeout()
 
     /* timeout判断 */
     if (time (NULL) > (this->time_last + this->time_out))
+    {
+        printf("time now=%d  timelast=%d  timeout=%d\n",  time(NULL), this->time_last, this->time_out);
         return true;
+    }
+
 
     return false;
 }
@@ -184,7 +216,7 @@ bool Backlogs::MatchEvent(Event event)
     std::vector<TreeNode*> vecTreeNode = CurrentNode->GetChildren();
 
 
-    //  遍历 current_rule 的所有孩子节点的规则
+    // 遍历 current_rule 的所有孩子节点的规则
 
     vector<TreeNode*>::iterator it;
 
@@ -226,6 +258,8 @@ bool Backlogs::MatchEvent(Event event)
 
             // L801
             pRule->SetEventMatchLastTime(time_last);
+
+            printf("rule matched, currentnode=0x%x\n");
         }
 
 
@@ -234,8 +268,11 @@ bool Backlogs::MatchEvent(Event event)
         if (vecTreeNode2.empty())
         {
             // L821 已经搜索到叶子节点，说明已经匹配指令
-            this->SetMatched(true);
-
+            if (isMatchRule == true)
+            {
+                this->SetMatched(true);
+                printf("Backlogs Leaf  Matched!\n");
+            }
         }
         else
         {
@@ -466,21 +503,6 @@ void Backlogs::SetClearAllMatchData()
 
     return;
 }
-
-//void Backlogs::Clear()
-//{
-    //this->SetEmpty(false);
-//}
-
-//bool Backlogs::IsDataEmpty()
-//{
-//    return this->isEmpty;
-//}
-
-//void Backlogs::SetEmpty(bool isEmpty)
-//{
-//    this->isEmpty = isEmpty;
-//}
 
 TreeNode* Backlogs::GetRootNode()
 {
