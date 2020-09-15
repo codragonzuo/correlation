@@ -20,6 +20,7 @@ Event event;
 
 void maptest()
 {
+    /*
     int num;
     IpAddress ipa("192.168.9.120");
     ipa.mapRuleMatchSrcIp.insert(pair<string, int>("aaa", 1));
@@ -39,6 +40,7 @@ void maptest()
       cout<<it->first<<' '<<it->second<<endl;
       it++;
    }
+   */
 }
 
 void sstest()
@@ -79,8 +81,8 @@ int main()
     string strIp = "192.169.100.21";
     vector<int>::iterator  itr;
 
-    IpAddress *srcIpa;
-    IpAddress *dstIpa;
+    string srcIpa;
+    string dstIpa;
 
     if (GetOctetsIP(strIp, octetsIP)==0)
     {
@@ -92,29 +94,20 @@ int main()
         printf("\n");
     }
 
-    //定义事件的IP
-    string srcIp = "192.169.100.21";
-    string dstIp = "192.169.100.91";
-
-    if (GetOctetsIP(srcIp, octetsIP)==0)
-    {
-        srcIpa = new IpAddress(srcIp);
-        dstIpa = new IpAddress(srcIp);
-    }
-    event.SrcIp = srcIpa;
-    event.DstIp = dstIpa;
+    event.SrcIp = "192.169.100.21";
+    event.DstIp = "192.169.100.91";
 
 
     ParseDirective(&corre);
     PrintBacklog(backlogs);
 
     num=1;
-    for (num = 1; num<2271; num++)
+    for (num = 1; num<2270; num++)//2270
     {
         printf("%d event\n", num);
         event.plugin_sid = 18106;
         event.plugin_id  = 7085;
-        corre.DoCorrelation(event);
+        corre.DoCorrelation(&event);
     }
 
 

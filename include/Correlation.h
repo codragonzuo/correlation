@@ -20,11 +20,27 @@ int xmltest();
 class Directive;
 class Rule;
 class RuleVar;
-class IpAddress;
+//class IpAddress;
 class INetwork;
+
+
+/* 特定IP地址 */
+class IpAddress {
+    public:
+        IpAddress();
+        IpAddress(vector<int> &octetsIP);
+        IpAddress(IpAddress* ipa);
+        IpAddress(string ip);
+        virtual ~IpAddress();
+        //vector<int> vecIpNum;
+        bool isAnyMatch;
+        map<string, int> mapRuleMatchSrcIp; //for test
+        string GetIpString();
+};
 
 /* N-way tree implementation
  */
+
 
 // https://github.com/vkiz/n-ary-tree/
 class TreeNode
@@ -64,13 +80,13 @@ class Event
         int plugin_id;
         bool directive_matched;
         bool rule_matched;
-        string src_ia; //源IP
-        string dst_ia; //目的IP
+        //string src_ia; //源IP
+        //string dst_ia; //目的IP
         int count;
         time_t time;
         int backlog_id;
-        IpAddress * SrcIp;
-        IpAddress * DstIp;
+        string SrcIp;
+        string DstIp;
 
     protected:
 
@@ -87,7 +103,7 @@ class Directive
         virtual ~Directive();
         int m_d;
         Rule* GetCurrentRule();
-        bool IsMatchEvent(Event event);
+        bool IsMatchEvent(Event* event);
 
 
     protected:
@@ -102,27 +118,20 @@ class Backlogs
         virtual ~Backlogs();
         int m_d;
         Directive * GetDirective();
-
         bool IsTimeout();
-        bool MatchEvent(Event event);
-        bool DirectiveRootRuleMatchEvent(Event event);
+        bool MatchEvent(Event* event);
+        bool DirectiveRootRuleMatchEvent(Event* event);
         Rule* GetCurrentRule();
         void SetCurrentRuleNode(TreeNode * node);
         TreeNode * GetCurrentRuleNode();
-        void UpdateFirstLastTs(Event event);
+        void UpdateFirstLastTs(Event* event);
         void SetTimeLastCurrentTime(time_t time);
         void UpdateTimeout();
         void SetRuleRefVars(TreeNode * node);
         TreeNode* GetNodeBranchByLevel(TreeNode * node, int level);
         TreeNode* GetRootNode();
-        //void SetRootNode(TreeNode * node);
         void SetRootNode(TreeNode* rootnode);
         void SetClearAllMatchData();
-        //void Clear();
-        //bool IsDataEmpty();
-        //void SetEmpty(bool isEmpty);
-
-
         void SetMatched(bool matched);
         bool IsMatched();
         //int backlog_id;
@@ -139,10 +148,13 @@ class Backlogs
     public:
         Backlogs * clone();
         void RecurseNodeCopy(TreeNode * dst_node, TreeNode * src_node);
+        void SetVarDataToChild(TreeNode * currentnode, bool isMatchRule);
 
     protected:
         TreeNode* Rootnode;
         TreeNode* CurrentNode;
+        void RecurseDestoryNode(TreeNode * dst_node);
+
 
 
     private:
@@ -162,8 +174,8 @@ class Rule
         Rule();
         virtual ~Rule();
     public:
-        bool MatchEvent(Event event);
-        void SetEventDataToRule(Event event);
+        bool MatchEvent(Event* event);
+        void SetEventDataToRule(Event* event);
         void SetEventMatchLastTime(time_t time);
 
 
@@ -186,7 +198,7 @@ class Rule
         //std::map<string, int> mapEventMatchDstIpNot;//支持深拷贝
         //std::map<string, int> mapEventMatchDstIp;   //支持深拷贝
         // 关联字段引用定义
-        std::list<RuleVar*> lstRuleVar;
+        std::list<RuleVar> lstRuleVar;
 
 
         void AddRuleMatchSrcPort(int port);
@@ -197,7 +209,7 @@ class Rule
 
 
 
-        void SetRuleVarsToList(RuleVar *var);
+        void SetRuleVarsToList(RuleVar var);
 
     public:
         std::map<int, int> mapPluginId;
@@ -208,41 +220,49 @@ class Rule
         void SetRulePluginSid(char* portstring);
 
     public:
-        void SetRuleIp(char* ipstring, bool is_sourceip);
+        void SetRuleIp(char* ipstring, bool is_sourceip);/* 保存规则From和To定义 */
         void SetSrcHomeNet(bool isEnable);
         void SetDstHomeNet(bool isEnable);
         void SetSrcHomeNetNot(bool isEnable);
         void SetDstHomeNetNot(bool isEnable);
-        void SetVarIp(IpAddress *ipaddress, RuleVar * var);
-        void SetEventDataSrcIpNot(IpAddress* ipaddress);
-        void SetEventDataSrcIp(IpAddress* ipaddress);
-        void SetEventDataDstIpNot(IpAddress* ipaddress);
-        void SetEventDataDstIp(IpAddress* ipaddress);
-        IpAddress * GetEventDataSrcIp();
-        IpAddress * GetEventDataSrcNotIp();
-        IpAddress * GetEventDataDstIp();
-        IpAddress * GetEventDataDstNotIp();
-        IpAddress * EventDataSrcIp;
-        IpAddress * EventDataDstIp;
-        IpAddress * EventDataSrcIpNot;
-        IpAddress * EventDataDstIpNot;
+        void SetVarIp(string ipaddress, RuleVar * var);
+        void SetEventDataSrcIpNot(string ipaddress);
+        void SetEventDataSrcIp(string ipaddress);
+        void SetEventDataDstIpNot(string ipaddress);
+        void SetEventDataDstIp(string ipaddress);
+        string GetEventDataSrcIp();
+        string GetEventDataSrcNotIp();
+        string GetEventDataDstIp();
+        string GetEventDataDstNotIp();
+        string EventDataSrcIp;
+        string EventDataDstIp;
+        string EventDataSrcIpNot;
+        string EventDataDstIpNot;
+/*
+        IpAddress EventDataSrcIp;
+        IpAddress EventDataDstIp;
+        IpAddress EventDataSrcIpNot;
+        IpAddress EventDataDstIpNot;
+*/
     public:
         std::vector<INetwork> vecNetwork;
         std::vector<INetwork> vecNetworknot;
     public:
-        bool MatchSrcHost(Event event);
-        bool MatchSrcHostNot(Event event);
-        bool MatchSrcIp(Event event);
-        bool MatchDstIp(Event event);
-        bool MatchPlugin_id(Event event);
-        bool MatchPlugin_sid(Event event);
-        bool MatchEventOccurence(Event event);
+        bool MatchSrcHost(Event* event);
+        bool MatchSrcHostNot(Event* event);
+        bool MatchSrcIp(Event* event);
+        bool MatchDstIp(Event* event);
+        bool MatchPlugin_id(Event* event);
+        bool MatchPlugin_sid(Event* event);
+        bool MatchEventOccurence(Event* event);
 
     public:
         bool SrcHomeNetEn;
         bool DstHomeNetEn;
         bool SrcHomeNetNotEn;
         bool DstHomeNetNotEn;
+        bool IsSrcIpAny;
+        bool IsDstIpAny;
     public:
         //保存规则定义字符
         string type;
@@ -296,9 +316,9 @@ class Correlation
         void DestoryDirective(Backlogs* pBacklogs);
 
         virtual ~Correlation();
-        void DoCorrelation(Event event);
-        void MatchBacklogs(Event event);
-        void MatchDirective(Event event);
+        void DoCorrelation(Event* event);
+        void MatchBacklogs(Event* event);
+        void MatchDirective(Event* event);
         std::vector<Backlogs*> vecBacklogs;  //Backlogs数据
         std::vector<Backlogs*> vecDirective; //指令数据
     protected:
@@ -383,19 +403,7 @@ class RuleVar {
 int GetOctetsIP(string ip, vector<int> &octetsIP);
 
 
-/* 特定IP地址 */
-class IpAddress {
-    public:
-        IpAddress();
-        IpAddress(vector<int> &octetsIP);
-        IpAddress(IpAddress* ipa);
-        IpAddress(string ip);
-        virtual ~IpAddress();
-        vector<int> vecIpNum;
-        bool isAnyMatch;
-        map<string, int> mapRuleMatchSrcIp; //for test
-        string GetIpString();
-};
+
 
 class INetwork {
     public:
