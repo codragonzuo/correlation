@@ -87,6 +87,8 @@ class Event
         int backlog_id;
         string SrcIp;
         string DstIp;
+        int srcport;
+        int dstport;
 
     protected:
 

@@ -18,6 +18,8 @@ Event event;
 3. directive½âÎö
 */
 
+int	Testmain();
+
 void maptest()
 {
     /*
@@ -154,6 +156,10 @@ int main()
     printf("-%s\n", a.substr(0,1).c_str() );
     if (a.substr(0,1) == "1")
         printf("first char is 1\n");
+
+
+	Testmain();
+
 
     cin.get();
     return 0;

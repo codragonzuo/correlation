@@ -651,3 +651,88 @@ void parse_text()
 
     return;
 }
+
+
+Event * CreatEventObj(string jsonstr)
+{
+	cJSON * json;
+	cJSON * event_json;
+	cJSON * event_attr;
+	string  strValue;
+	Event * event = NULL;
+
+	json = cJSON_Parse(jsonstr.c_str());
+	if (NULL == json)
+	{
+		printf("Error before: [%s]\n", cJSON_GetErrorPtr());
+		return NULL;
+	}
+
+	event_json = cJSON_GetObjectItem(json, "event");
+
+	if (event_json != NULL)
+	{
+		event = new Event();
+		event_attr = cJSON_GetObjectItem(event_json, "plugin_id");
+		if (cJSON_IsNumber(event_attr))
+		{
+			event->plugin_id = event_attr->valueint;
+		}
+		event_attr = cJSON_GetObjectItem(event_json, "plugin_sid");
+		if (cJSON_IsNumber(event_attr))
+		{
+			event->plugin_sid = event_attr->valueint;
+		}
+		event_attr = cJSON_GetObjectItem(event_json, "src_ip");
+		if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
+		{
+			event->SrcIp = event_attr->valuestring;
+		}
+		event_attr = cJSON_GetObjectItem(event_json, "dst_ip");
+		if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
+		{
+			event->DstIp = event_attr->valuestring;
+		}
+
+		event_attr = cJSON_GetObjectItem(event_json, "src_port");
+		if (cJSON_IsNumber(event_attr))
+		{
+			event->srcport = event_attr->valueint;
+		}
+
+		event_attr = cJSON_GetObjectItem(event_json, "dst_port");
+		if (cJSON_IsNumber(event_attr))
+		{
+			event->dstport = event_attr->valueint;
+		}
+		if (event->plugin_id == 0 || event->plugin_sid == 0)
+		{
+			delete event;
+			event = NULL;
+		}
+	}
+	else
+	{
+		event = NULL;
+	}
+
+	return event;
+}
+
+void ParserEvent(char * strEvent)
+{
+	if (strEvent == NULL)
+	{
+		return;
+	}
+	Event* event = CreatEventObj(string(strEvent));
+
+	if (event == NULL) return;
+
+	printf("******************Event****************\n plugin_id=%d plugin_sid=%d\n srcip=%s dstip=%s srcport=%d dstport=%d\n",
+		event->plugin_id, event->plugin_sid, event->SrcIp.c_str(), event->DstIp.c_str(), event->srcport, event->dstport);
+
+
+}
+
+
