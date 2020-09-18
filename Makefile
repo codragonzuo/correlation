@@ -13,7 +13,7 @@
 #
 EXECUTABLE := xmain    # 可执行文件名
 SHARELIB := xmain.so
-LIBDIR:= 
+LIBDIR:= /usr/local/lib/
 LIBS :=   
 INCLUDES:=.  include  cjson example
 SRCDIR:= src  cjson example
@@ -21,7 +21,7 @@ SRCDIR:= src  cjson example
 # # Now alter any implicit rules' variables if you like, e.g.:
 GCCD:=gcc
 CC:=g++
-CFLAGS := -g -Wall -O3  -std=c++11 -fPIC
+CFLAGS := -g -Wall -O3  -std=c++11 -fPIC  -I/usr/local/include/librdkafka/  -lpthread  -lrdkafka -lrdkafka++ -lz -lpthread -lrt
 CPPFLAGS := $(CFLAGS)
 CPPFLAGS += $(addprefix -I,$(INCLUDES))
 CPPFLAGS += -MMD
@@ -66,7 +66,7 @@ $(MISSING_DEPS) :
 endif
 -include $(DEPS)
 $(EXECUTABLE) : $(OBJS)
-	$(CC) -o $(EXECUTABLE) $(OBJS) $(addprefix -L,$(LIBDIR)) $(addprefix -l,$(LIBS))
+	$(CC) -o $(EXECUTABLE) $(OBJS) /usr/local/lib/librdkafka++.so  /usr/local/lib/librdkafka.so  $(addprefix -L,$(LIBDIR)) $(addprefix -l,$(LIBS)) 
 
 $(SHARELIB) : $(OBJS)
 	$(CC) -shared -o $(SHARELIB) $(OBJS) $(addprefix -L,$(LIBDIR)) $(addprefix -l,$(LIBS)) 
