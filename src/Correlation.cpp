@@ -8,7 +8,7 @@
 
 using namespace std;
 
-
+int sendMessage(std::string msg);
 
 /* 字符串分割函数 */
 void SplitString(const string& s, vector<string>& v, const string& delimiter)
@@ -182,7 +182,7 @@ bool Backlogs::IsTimeout()
     /* timeout判断 */
     if (time (NULL) > (this->time_last + this->time_out))
     {
-        printf("time now=%ld  timelast=%ld  timeout=%ld\n",  time(NULL), this->time_last, this->time_out);
+        printf("time now=%lud  timelast=%lud  timeout=%lud\n",  time(NULL), this->time_last, this->time_out);
         return true;
     }
 
@@ -1472,7 +1472,7 @@ void Correlation::DestoryBacklogs(Backlogs* pBacklogs)
 }
 
 
-//加入 blacklog_id魏Key值的map表
+//加入 blacklog_id为Key值的map表
 void Correlation::AddDirectiveMapItem(Backlogs* pBacklogs)
 {
     BacklogsList  *blist;
@@ -1580,11 +1580,11 @@ void Correlation::MatchBacklogs(Event* event)
             this->vecBacklogs.erase(it);
             delete pBacklogs;
             printf("backlogs Timeout!\n");
-			if (vecBacklogs.begin() == vecBacklogs.end())
-			{
-				printf("Backlogs vector is empty!\n");
-				it = vecBacklogs.end();
-			}
+            if (vecBacklogs.begin() == vecBacklogs.end())
+            {
+                printf("Backlogs vector is empty!\n");
+                it = vecBacklogs.end();
+            }
             //it++;
             continue;
         }
@@ -1615,17 +1615,17 @@ void Correlation::MatchBacklogs(Event* event)
             std::vector<TreeNode*> vecTreeNode2 = currentnode->GetChildren();
             if (vecTreeNode2.empty())
             {
-
                 this->vecBacklogs.erase(it);
                 delete pBacklogs;
-				if (vecBacklogs.begin() == vecBacklogs.end())
-				{
-					printf("Backlogs vector is empty!\n");
-					it = vecBacklogs.end();
-				}
+                if (vecBacklogs.begin() == vecBacklogs.end())
+                {
+                    printf("Backlogs vector is empty!\n");
+                    it = vecBacklogs.end();
+                }
                 //这里不能it++，vector删除元素后会自动调整位置和长度
                 printf("backlogs Matched!\n");
-				
+                std::string msg = std::to_string(pBacklogs->directive_id);
+                sendMessage(msg);
                 continue;
             }
         }
@@ -1967,3 +1967,22 @@ INetwork::~INetwork()
 }
 
 
+void string_test()
+{
+	//字符串分割测试
+	vector<string> vecStr;
+	string a("1001,1002,1003:1004,1005");
+	string b;
+
+	SplitString(a, vecStr, ",");
+	vector<string>::iterator  it;
+	for (it = vecStr.begin(); it != vecStr.end(); it++)
+	{
+		b = *it;
+		printf("-%s\n", b.c_str());
+	}
+	printf("-%s\n", a.substr(0, 1).c_str());
+	if (a.substr(0, 1) == "1")
+	printf("first char is 1\n");
+
+}

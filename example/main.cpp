@@ -10,9 +10,14 @@ using namespace std;
 Correlation corre;
 Backlogs * backlogs;
 Event event;
-int Testmain();
 void ParserEvent(char * strEvent);
-
+int Testmain();
+int producer_init();
+int sendMessage(std::string msg);
+void CorreEvent(Event * event)
+{
+	corre.DoCorrelation(event);
+}
 
 int  main(int argc, char **argv)
 {
@@ -62,58 +67,19 @@ int  main(int argc, char **argv)
     num=1;
     for (num = 1; num<2270; num++)//2270
     {
-        printf("%d event\n", num);
+        //printf("%d event\n", num);
         event.plugin_sid = 18106;
         event.plugin_id  = 7085;
         event.srcport++;
         event.dstport++;
-        corre.DoCorrelation(&event);
+        //corre.DoCorrelation(&event);
     }
 
+    producer_init();
 
-    /*
-    printf("%d event\n", ++num);
-    event.plugin_sid = 18106;
-    event.plugin_id  = 7085;
-    corre.DoCorrelation(event);
-
-    printf("%d event\n", ++num);
-    event.plugin_sid = 18106;
-    event.plugin_id  = 7085;
-    corre.DoCorrelation(event);
-
-    printf("%d event\n", ++num);
-    event.plugin_sid = 18106;
-    event.plugin_id  = 7085;
-    corre.DoCorrelation(event);
-
-    printf("%d event\n", ++num);
-    event.plugin_sid = 18106;
-    event.plugin_id  = 7085;
-    corre.DoCorrelation(event);
-
-    printf("%d event\n", ++num);
-    event.plugin_sid = 18106;
-    event.plugin_id  = 7085;
-    corre.DoCorrelation(event);
-
-*/
-    //×Ö·û´®·Ö¸î²âÊÔ
-    vector<string> vecStr;
-    string a("1001,1002,1003:1004,1005");
-    string b;
-
-
-    SplitString(a, vecStr, ",");
-    vector<string>::iterator  it;
-    for (it=vecStr.begin(); it!=vecStr.end(); it++)
-    {
-        b = *it;
-        printf("-%s\n", b.c_str() );
-    }
-    printf("-%s\n", a.substr(0,1).c_str() );
-    if (a.substr(0,1) == "1")
-        printf("first char is 1\n");
+    printf("Send Msg !\n");
+    std::string msg = "Send Mst to Kafka";
+    sendMessage(msg);
 
 	Testmain();
     cin.get();
