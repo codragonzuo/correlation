@@ -324,7 +324,7 @@ void  ParseDirective(Correlation * corre)
     cJSON *json;
     //*json_value, *json_timestamp;
     cJSON *directives;
-    cJSON *directive;
+    cJSON *directive = NULL;
     cJSON *directive_id;
     cJSON *directive_name;
     cJSON *directive_priority;
@@ -487,9 +487,6 @@ void RecurseJsonNode(TreeNode * treenode, cJSON *jsonnode)
             printf("7  rule_port_from : \"%s\"\n", rule_port_from->valuestring);
             rule->port_from = rule_port_from->valuestring;
             rule->SetRuleMatchPort(rule_port_from->valuestring, true);
-            //引用
-            // 无引用
-
         }
 
         /* 8. timeout */
@@ -734,5 +731,3 @@ void ParserEvent(char * strEvent)
 
 
 }
-
-

@@ -184,6 +184,8 @@ class Rule
     public:
         int GetEventDataSrcPort();
         int GetEventDataDstPort();
+        void SetEventDataSrcPort(int port);
+        void SetEventDataDstPort(int port);
 
     public:
         /* 规则匹配端口 */
@@ -208,9 +210,6 @@ class Rule
         void AddRuleMatchDstPort(int port);
         void AddRuleMatchDstPortNot(int port);
         void SetRuleMatchPort(char* portstring, bool is_srcport);
-
-
-
         void SetRuleVarsToList(RuleVar var);
 
     public:
@@ -240,12 +239,6 @@ class Rule
         string EventDataDstIp;
         string EventDataSrcIpNot;
         string EventDataDstIpNot;
-/*
-        IpAddress EventDataSrcIp;
-        IpAddress EventDataDstIp;
-        IpAddress EventDataSrcIpNot;
-        IpAddress EventDataDstIpNot;
-*/
     public:
         std::vector<INetwork> vecNetwork;
         std::vector<INetwork> vecNetworknot;
@@ -257,7 +250,8 @@ class Rule
         bool MatchPlugin_id(Event* event);
         bool MatchPlugin_sid(Event* event);
         bool MatchEventOccurence(Event* event);
-
+        bool MatchSrcPort(int port);
+        bool MatchDstPort(int port);
     public:
         bool SrcHomeNetEn;
         bool DstHomeNetEn;
@@ -265,6 +259,8 @@ class Rule
         bool DstHomeNetNotEn;
         bool IsSrcIpAny;
         bool IsDstIpAny;
+        bool IsSrcPortAny;
+        bool IsDstPortAny;
     public:
         //保存规则定义字符
         string type;
@@ -282,6 +278,8 @@ class Rule
     public:
         time_t  mEventLastMatchTime;
         int     mEventMatchCount;
+        int     mEventSrcPort;
+        int     mEventDstPort;
     public:
     //    Rule& operator=(Rule& rule);
 

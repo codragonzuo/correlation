@@ -41,19 +41,19 @@ SimRuleVarType sim_get_rule_var_from_char (const char *var)
     return SIM_RULE_VAR_DST_PORT;
   else if (!strcmp (var, SIM_PROTOCOL_CONST))
     return SIM_RULE_VAR_PROTOCOL;
-  else if (!strcasecmp (var, SIM_PLUGIN_ID_CONST))
+  else if (!strcmp (var, SIM_PLUGIN_ID_CONST))
     return SIM_RULE_VAR_PLUGIN_ID;
   else if (!strcmp (var, SIM_PLUGIN_SID_CONST))
     return SIM_RULE_VAR_PLUGIN_SID;
   else if (!strcmp (var, SIM_SENSOR_CONST))
     return SIM_RULE_VAR_SENSOR;
-  else if (!strcasecmp (var, SIM_PRODUCT_CONST))
+  else if (!strcmp (var, SIM_PRODUCT_CONST))
     return SIM_RULE_VAR_PRODUCT;
-  else if (!strcasecmp (var, SIM_ENTITY_CONST))
+  else if (!strcmp (var, SIM_ENTITY_CONST))
     return SIM_RULE_VAR_ENTITY;
-  else if (!strcasecmp (var, SIM_CATEGORY_CONST))
+  else if (!strcmp (var, SIM_CATEGORY_CONST))
     return SIM_RULE_VAR_CATEGORY;
-  else if (!strcasecmp (var, SIM_SUBCATEGORY_CONST))
+  else if (!strcmp (var, SIM_SUBCATEGORY_CONST))
     return SIM_RULE_VAR_SUBCATEGORY;
   else if (!strcmp (var, SIM_FILENAME_CONST))
     return SIM_RULE_VAR_FILENAME;
@@ -140,7 +140,7 @@ void Backlogs::RecurseDestoryNode(TreeNode * dst_node)
         std::vector<TreeNode*> vecTreeNode = dst_node->GetChildren();
         vector<TreeNode*>::iterator it;
         it = vecTreeNode.begin();
-        printf("vector number=%d\n", vecTreeNode.size());
+        printf("vector number=%lud\n", vecTreeNode.size());
         while(it != vecTreeNode.end())
         {
             childnode = *it;
@@ -182,7 +182,7 @@ bool Backlogs::IsTimeout()
     /* timeout判断 */
     if (time (NULL) > (this->time_last + this->time_out))
     {
-        printf("time now=%d  timelast=%d  timeout=%d\n",  time(NULL), this->time_last, this->time_out);
+        printf("time now=%ld  timelast=%ld  timeout=%ld\n",  time(NULL), this->time_last, this->time_out);
         return true;
     }
 
@@ -208,7 +208,7 @@ bool Backlogs::MatchEvent(Event* event)
     if (currentRule == NULL) return false;
 
     TreeNode * node = NULL;
-    TreeNode * child_node = NULL;
+
 
 
 
@@ -384,11 +384,16 @@ Directive* Backlogs::GetDirective()
 
 
 
-// sim_directive_set_rule_vars
-// /* Fill children data with backlog data from the node level specified */
-// (1)如果匹配了当前规则，把当前匹配规则的vars值设置到所有孩子节点。
-// (2)查找所有孩子节点的引用level:vars值，是指到所有孩子节点
-// 当前规则匹配，更新下一级规则的引用变量
+
+/******************************************************************************
+SetRuleRefVars :   规则引用转换成规则匹配数据
+OSSIM参考      ：  sim_directive_set_rule_vars
+功能说明       ：  读取规则引用配置，从上级查找引用值并设置到当前规则匹配数据
+参数说明       ：  参数节点为当前匹配规则节点的孩子节点
+                    (1)如果匹配了当前规则，把当前匹配规则的vars值设置到所有孩子节点
+                    (2)查找所有孩子节点的引用level:vars值，是指到所有孩子节点
+                     当前规则匹配，更新下一级规则的引用变量
+******************************************************************************/
 void Backlogs::SetRuleRefVars(TreeNode * node)
 {
     Rule * pRule;
@@ -506,12 +511,6 @@ void  Backlogs::SetRootNode(TreeNode* rootnode)
 
 }
 
-void Backlogs::SetClearAllMatchData()
-{
-
-    return;
-}
-
 TreeNode* Backlogs::GetRootNode()
 {
     return this->Rootnode;
@@ -558,7 +557,7 @@ void Backlogs::RecurseNodeCopy(TreeNode * dst_node, TreeNode * src_node)
         std::vector<TreeNode*> vecTreeNode = src_node->GetChildren();
         vector<TreeNode*>::iterator it;
         it = vecTreeNode.begin();
-        printf("vector number=%d\n", vecTreeNode.size());
+        printf("vector number=%lud\n", vecTreeNode.size());
         while(it != vecTreeNode.end())
         {
             childnode = *it;
@@ -578,9 +577,14 @@ Rule::Rule()
     this->EventDataDstIp = "";
     this->EventDataSrcIpNot = "";
     this->EventDataDstIpNot = "";
+    this->mEventSrcPort = 0;
+    this->mEventDstPort = 0;
+
 
     this->IsSrcIpAny = false;
     this->IsDstIpAny = false;
+    this->IsSrcPortAny = false;
+    this->IsDstPortAny = false;
 }
 
 Rule::~Rule()
@@ -626,18 +630,31 @@ bool Rule::MatchEvent(Event* event)
         return false;
     }
 
-    //对于根规则，from 和 to 是 any，不需要判断
-    /*
-    if (this->MatchSrcIp(event))
+    if (this->IsSrcPortAny == true)
     {
         matched = true;
+    }
+    else  if (this->MatchSrcPort(event->srcport))
+    {
+        matched = true;
+    }
+    else
+    {
+        return false;
     }
 
-    if (this->MatchDstIp(event))
+    if (this->IsDstPortAny == true)
     {
         matched = true;
     }
-    */
+    else  if (this->MatchDstPort(event->srcport))
+    {
+        matched = true;
+    }
+    else
+    {
+        return false;
+    }
 
     // L4985 occurrence匹配
     this->mEventMatchCount ++;
@@ -662,8 +679,6 @@ bool Rule::MatchEvent(Event* event)
         event->count = 1;
         printf("rule occurence = %d  eventmatchcount=%d  matched\n", this->occurrence, this->mEventMatchCount);
     }
-
-
 
     event->rule_matched = true;
 
@@ -694,14 +709,22 @@ bool Rule::MatchEventOccurence(Event* event)
     return false;
 }
 
+/******************************************************************************
+函数名称       ：  SetEventDataToRule
+功能说明       :   把当前匹配事件数据保存到匹配规则
+OSSIM参考      ：  sim_rule_set_event_data
+参数说明       ：
+******************************************************************************/
 void Rule::SetEventDataToRule(Event* event)
 {
 
     /* L5046 */
-    //this->Sets
     this->SetEventDataSrcIp(event->SrcIp);
     this->SetEventDataDstIp(event->DstIp);
+
     //5055
+    this->SetEventDataSrcPort(event->srcport);
+    this->SetEventDataDstPort(event->srcport);
 
     return;
 }
@@ -716,12 +739,22 @@ void Rule::SetEventMatchLastTime(time_t time)
 
 int Rule::GetEventDataSrcPort()
 {
-    return 0;//this->src_port;
+    return this->mEventSrcPort;
 }
 
 int Rule::GetEventDataDstPort()
 {
-    return 0;//this->dst_port;
+    return this->mEventDstPort;
+}
+
+void Rule::SetEventDataSrcPort(int port)
+{
+    this->mEventSrcPort = port;
+}
+
+void Rule::SetEventDataDstPort(int port)
+{
+    this->mEventDstPort = port;
 }
 
 void Rule::AddRuleMatchSrcPort(int port)
@@ -760,6 +793,76 @@ void Rule::AddRuleMatchDstPortNot(int port)
     {
         this->mapDstPortNot.insert(pair<int, int>(port, 1));
     }
+}
+
+bool Rule::MatchSrcPort(int port)
+{
+    if (port == 0) return true; //端口为0认为默认匹配
+
+    bool IsPortMatched    = false;
+    bool IsPortNotMatched = false;
+
+    map<int, int>::iterator iter;
+    iter = mapSrcPort.find(port);
+    if(iter != mapSrcPort.end())
+    {
+        IsPortMatched = true;
+    }
+    else
+    {
+
+    }
+
+    iter = mapSrcPortNot.find(port);
+    if(iter != mapSrcPortNot.end())
+    {
+        IsPortNotMatched = true;
+    }
+    else
+    {
+
+    }
+
+    if (IsPortMatched == true || IsPortNotMatched == true)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Rule::MatchDstPort(int port)
+{
+    if (port == 0) return true; //端口为0认为默认匹配
+
+    bool IsPortMatched    = false;
+    bool IsPortNotMatched = false;
+
+    map<int, int>::iterator iter;
+    iter = mapDstPort.find(port);
+    if(iter != mapDstPort.end())
+    {
+        IsPortMatched = true;
+    }
+    else
+    {
+
+    }
+
+    iter = mapDstPortNot.find(port);
+    if(iter != mapDstPortNot.end())
+    {
+        IsPortNotMatched = true;
+    }
+    else
+    {
+
+    }
+
+    if (IsPortMatched == true || IsPortNotMatched == true)
+    {
+        return true;
+    }
+    return false;
 }
 
 /* */
@@ -870,7 +973,12 @@ void  Rule::SetRuleVarsToList(RuleVar var)
 }
 
 
-/* static gboolean sim_xml_directive_set_rule_ports (SimRule * rule, gchar * value, gboolean are_src_ports)*/
+/******************************************************************************
+SetRuleIp :  设置保存指令源IP和目的IP定义
+OSSIM参考 ：  sim_xml_directive_set_rule_ports
+功能说明  ：  把从XML读取的规则源端口和目的信息设置到规则
+端口参数  ：  分为引用 1:SrcPort, ANY, 端口值2398,2234三种
+******************************************************************************/
 void Rule::SetRuleMatchPort(char* portstring, bool is_srcport)
 {
     /* 把portstring按照','分割成字符串数组 */
@@ -878,14 +986,25 @@ void Rule::SetRuleMatchPort(char* portstring, bool is_srcport)
     vector<string> vecStr;
     string b = portstring;
     string token_value;
+    string str_value;
     bool port_neg;
+
+    if (b == "ANY")
+    {
+        /* ANY情形不处理 */
+        if (is_srcport == true)
+            this->IsSrcPortAny = true;
+        else
+            this->IsDstPortAny = true;
+        return;
+    }
 
     SplitString(b, vecStr, ",");
     vector<string>::iterator  it;
     for (it=vecStr.begin(); it!=vecStr.end(); it++)
     {
-        b = *it;
-        if (b.substr(0,1) == "!")
+        str_value = *it;
+        if (str_value.substr(0,1) == "!")
         {
             port_neg = true;
             token_value = b.substr(1, b.length()-1);
@@ -893,11 +1012,13 @@ void Rule::SetRuleMatchPort(char* portstring, bool is_srcport)
         else
         {
             port_neg = false;
-            token_value = b;
+            token_value = str_value;
         }
 
         string::size_type pos2;
         pos2 = token_value.find(":");
+
+        /* 第一种情况，引用类型1:SrcPort */
         if (pos2 !=  token_value.npos)
         {
             //找到分隔符
@@ -918,21 +1039,43 @@ void Rule::SetRuleMatchPort(char* portstring, bool is_srcport)
             this->lstRuleVar.push_back(var);
 
         }
-        else if (token_value != "ANY")
+        /* 第2种情况，端口范围 */
+        else
         {
-            //没有找到
-            //端口范围场景，比如"1-5"
-            pos2 = token_value.find("-");
-            if (pos2 !=  token_value.npos)
+            if (token_value != "ANY")
             {
-                //找到分隔符
-                string startstr = token_value.substr(0, pos2);
-                string endstr = token_value.substr(pos2, token_value.length()-pos2);
-                int startport = stoi(startstr.c_str(), 0, 10);
-                int endport = stoi(endstr.c_str(), 0, 10);
-                for (int port = startport; port <= endport; port++)
+                //端口范围场景，比如"1-5"
+                pos2 = token_value.find("-");
+                if (pos2 !=  token_value.npos)
                 {
-                    if (port_neg)       //if ports are ie. !1-5, all the ports in that range will be negated.
+                    //找到分隔符
+                    string startstr = token_value.substr(0, pos2);
+                    string endstr = token_value.substr(pos2, token_value.length()-pos2);
+                    int startport = stoi(startstr.c_str(), 0, 10);
+                    int endport = stoi(endstr.c_str(), 0, 10);
+                    for (int port = startport; port <= endport; port++)
+                    {
+                        if (port_neg)       //if ports are ie. !1-5, all the ports in that range will be negated.
+                        {
+                            if (is_srcport)
+                                this->AddRuleMatchSrcPortNot(port);
+                            else
+                                this->AddRuleMatchDstPortNot(port);
+                        }
+                        else
+                        {
+                            if (is_srcport)
+                                this->AddRuleMatchSrcPort(port);
+                            else
+                                this->AddRuleMatchDstPort(port);
+                        }
+
+                    }
+                }
+                else //只有一个数字端口
+                {
+                    int port = stoi(token_value.c_str(), 0, 10);
+                    if (port_neg)
                     {
                         if (is_srcport)
                             this->AddRuleMatchSrcPortNot(port);
@@ -946,42 +1089,16 @@ void Rule::SetRuleMatchPort(char* portstring, bool is_srcport)
                         else
                             this->AddRuleMatchDstPort(port);
                     }
-
                 }
             }
-            else //只有一个数字端口
+            else
             {
-                int port = stoi(token_value.c_str(), 0, 10);
-                if (port_neg)
-                {
-                    if (is_srcport)
-                        this->AddRuleMatchSrcPortNot(port);
-                    else
-                        this->AddRuleMatchDstPortNot(port);
-                }
-                else
-                {
-                    if (is_srcport)
-                        this->AddRuleMatchSrcPort(port);
-                    else
-                        this->AddRuleMatchDstPort(port);
-                }
             }
         }
-    }
 
-    if (is_srcport)
-    {
-        printf("SetRulePort SrcPort: %s\n", portstring);
     }
-    else
-    {
-        printf("SetRulePort DstPort: %s\n", portstring);
-    }
-
-    /*对字符串数组进行遍历 */
-
 }
+
 /******************************************************************************
 SetRuleIp :  设置保存指令源IP和目的IP定义
 ******************************************************************************/
@@ -1463,6 +1580,11 @@ void Correlation::MatchBacklogs(Event* event)
             this->vecBacklogs.erase(it);
             delete pBacklogs;
             printf("backlogs Timeout!\n");
+			if (vecBacklogs.begin() == vecBacklogs.end())
+			{
+				printf("Backlogs vector is empty!\n");
+				it = vecBacklogs.end();
+			}
             //it++;
             continue;
         }
@@ -1493,10 +1615,17 @@ void Correlation::MatchBacklogs(Event* event)
             std::vector<TreeNode*> vecTreeNode2 = currentnode->GetChildren();
             if (vecTreeNode2.empty())
             {
+
                 this->vecBacklogs.erase(it);
                 delete pBacklogs;
+				if (vecBacklogs.begin() == vecBacklogs.end())
+				{
+					printf("Backlogs vector is empty!\n");
+					it = vecBacklogs.end();
+				}
                 //这里不能it++，vector删除元素后会自动调整位置和长度
                 printf("backlogs Matched!\n");
+				
                 continue;
             }
         }
@@ -1542,7 +1671,7 @@ void Correlation::MatchDirective(Event* event)
     TreeNode *rootnode;
     Rule * rootrule;
 
-    bool  isEventMatchRootRule = true;
+    bool  isRuleMatched = true;
     Backlogs * pBacklog = NULL;
     Backlogs * pBacklog_plugin = NULL;
 
@@ -1570,13 +1699,11 @@ void Correlation::MatchDirective(Event* event)
             }
 
             //@event plugin_id in @event context L312
-
-
             // L336  检查event事件是否满足指令的时间范围
 
 
             // 检查事件是否匹配指令的根节点规则
-            isEventMatchRootRule = pBacklog_plugin->DirectiveRootRuleMatchEvent(event);
+            isRuleMatched = pBacklog_plugin->DirectiveRootRuleMatchEvent(event);
 
 
             /* 判断既匹配了plugin，又匹配了根指令，需要新建Backlogs数据
@@ -1587,13 +1714,8 @@ void Correlation::MatchDirective(Event* event)
 
             this->AddBacklogs(pNewBacklogs);
 
-            if (isEventMatchRootRule == true)
+            if (isRuleMatched == true)
             {
-                // 创建指定的 backlog 及 backlog_id, backlog默认一直存在，这里只情况数据
-                // pNewBacklogs->SetClearAllMatchData();
-
-                // pNewBacklogs->SetEmpty(false);
-
                 // 获取backlog的根节点和根规则
                 rootnode = pNewBacklogs->GetRootNode();
                 rootrule = rootnode->GetRule();
@@ -1601,7 +1723,6 @@ void Correlation::MatchDirective(Event* event)
                 pNewBacklogs->SetCurrentRuleNode(rootnode);
 
                 // 设置rule_root的lasttime L362
-                //time_t        time_last = time (NULL);
                 rootrule->SetEventMatchLastTime(time (NULL));
 
                 // 更新backlog的 first_last_ts  L363
@@ -1609,18 +1730,16 @@ void Correlation::MatchDirective(Event* event)
 
 
                 // L368 sim_rule_set_event_data (rule_root, event);
-                // // 把事件的属性字段保存到根规则
+                // 把事件的属性字段保存到根规则
                 rootrule->SetEventDataToRule(event);
 
+                /*  如果孩子节点为空，则匹配当前指令 */
                 pNewBacklogs->SetVarDataToChild(rootnode, true);
 
                 event->rule_matched = true;
                 event->directive_matched = true;
-                /*  如果孩子节点为空，则匹配当前指令 */
-                //rootnode->GetChildren();
             }
         }
-
 	}
 
 	//需要查找所有plugin_id为ANY(0x7FFFFFFF)的情形
@@ -1686,8 +1805,6 @@ TreeNode* TreeNode::AddChild()
     {
         node->SetNext(child);
     }
-
-
 
     return child;
 }

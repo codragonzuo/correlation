@@ -10,54 +10,11 @@ using namespace std;
 Correlation corre;
 Backlogs * backlogs;
 Event event;
-/*
+int Testmain();
+void ParserEvent(char * strEvent);
 
-1. 初始化2个directive
-2. 加入将directive的规则
-3. 构造事件查看匹配结果
-3. directive解析
-*/
 
-int	Testmain();
-
-void maptest()
-{
-    /*
-    int num;
-    IpAddress ipa("192.168.9.120");
-    ipa.mapRuleMatchSrcIp.insert(pair<string, int>("aaa", 1));
-    ipa.mapRuleMatchSrcIp.insert(pair<string, int>("bbb", 2));
-    IpAddress ipb = ipa;
-    vector<int>::iterator  itc;
-    for (itc= ipb.vecIpNum.begin(); itc!=ipb.vecIpNum.end(); itc++)
-    {
-        num = *itc;
-            printf("%d.", num);
-    }
-    std::map<string, int>::iterator it;
-    std::map<string, int>::iterator itEnd;
-    it = ipa.mapRuleMatchSrcIp.begin();
-    itEnd = ipa.mapRuleMatchSrcIp.end();
-    while (it != itEnd) {
-      cout<<it->first<<' '<<it->second<<endl;
-      it++;
-   }
-   */
-}
-
-void sstest()
-{
-    stringstream ss;
-    ss.clear();
-    ss<<14<<"."<<17<<"."<<19<<"."<<20;
-
-    string s=ss.str();
-
-    cout<<s<<endl;
-    cout<<"ffff"<<endl;
-}
-
-int main()
+int  main(int argc, char **argv)
 {
     int x = 1551;
     int num;
@@ -66,11 +23,7 @@ int main()
     h.name = "myname";
     h.a = &x;
 
-    //规则树节点如何 克隆？？？？
-    maptest();
-    sstest();
-
-
+    
     printf("\n--------------\n");
 
     Backlogs m = h;
@@ -98,6 +51,9 @@ int main()
 
     event.SrcIp = "192.169.100.21";
     event.DstIp = "192.169.100.91";
+    event.srcport = 20;
+    event.dstport = 30;
+
 
 
     ParseDirective(&corre);
@@ -109,6 +65,8 @@ int main()
         printf("%d event\n", num);
         event.plugin_sid = 18106;
         event.plugin_id  = 7085;
+        event.srcport++;
+        event.dstport++;
         corre.DoCorrelation(&event);
     }
 
@@ -157,65 +115,8 @@ int main()
     if (a.substr(0,1) == "1")
         printf("first char is 1\n");
 
-
 	Testmain();
-
-
     cin.get();
     return 0;
-}
-
-
-class ShalloC
-{
-//Sample 01: Private Data Member
-private:
-	int * x;
-public:
-	//Sample 02: Constructor with single parameter
-	ShalloC(int m)
-	{
-		x = new int;
-		*x = m;
-	}
-	//Sample 08: Introduce Copy Constructor and perform Deep Copy
-	ShalloC(const ShalloC& obj)
-	{
-		x = new int;
-		*x = obj.GetX();
-	}
-	//Sample 03: Get and Set Functions
-	int GetX() const
-	{
-		return *x;
-	}
-	void SetX(int m)
-	{
-		*x = m;
-	}
-	//Sample 04: Print Function
-	void PrintX()
-	{
-		cout << "Int X=" << *x << endl;
-	}
-	//Sample 05: DeAllocate the heap
-	~ShalloC()
-	{
-		delete x;
-	}
-};
-void deepcopy()
-{
-	//Sample 06: Create Object 1 and copy that to Object 2.
-	//			 Print the data member for both Object 1 & 2.
-	ShalloC ob1(10);
-	ShalloC ob2 = ob1 ;
-	ob1.PrintX();
-	ob2.PrintX();
-	//Sample 07: Change the Data member value of Object 1
-	//			 And print both Object 1 and Object 2
-	ob1.SetX(12);
-	ob1.PrintX();
-	ob2.PrintX();
 }
 
