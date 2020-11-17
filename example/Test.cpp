@@ -267,9 +267,7 @@ void msg_consume(RdKafka::Message* message, void* opaque) {
             std::cout << "Key: " << *message->key() << std::endl;
         }
         if (verbosity >= 1) {
-            printf("%.*s\n",
-                static_cast<int>(message->len()),
-                static_cast<const char *>(message->payload()));
+            //printf("%.*s\n", static_cast<int>(message->len()), static_cast<const char *>(message->payload()));
             ParserEvent((char *)(message->payload()));
         }
         break;

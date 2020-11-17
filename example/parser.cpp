@@ -364,9 +364,9 @@ void RecurseTree(TreeNode* node)
 {
     Rule * rule;
     TreeNode* childnode;
-	if (node!= NULL)
-	{
-		//当前节点
+    if (node!= NULL)
+    {
+        //当前节点
         rule = node->GetRule();
         printf("rule node:0x%x name : %s  type: %s  reliabity:%d  occurence:%d\n", node, rule->name.c_str(), rule->type.c_str(), rule->reliability,rule->occurrence);
 
@@ -381,7 +381,7 @@ void RecurseTree(TreeNode* node)
             RecurseTree(childnode);
             it++;
         }
-	}
+    }
 }
 
 void PrintBacklog(Backlogs * backlogs)
@@ -433,75 +433,77 @@ Event myEvent;
 
 Event * CreatEventObj(string jsonstr)
 {
-	cJSON * json;
-	cJSON * event_json;
-	cJSON * event_attr;
-	string  strValue;
-	Event * event = NULL;
+    cJSON * json;
+    cJSON * event_json;
+    cJSON * event_attr;
+    string  strValue;
+    Event * event = NULL;
 
-	json = cJSON_Parse(jsonstr.c_str());
-	if (NULL == json)
-	{
-		printf("Error before: [%s]\n", cJSON_GetErrorPtr());
-		return NULL;
-	}
+    json = cJSON_Parse(jsonstr.c_str());
+    if (NULL == json)
+    {
+        printf("Error before: [%s]\n", cJSON_GetErrorPtr());
+        return NULL;
+    }
 
-	event_json = cJSON_GetObjectItem(json, "event");
+    //event_json = cJSON_GetObjectItem(json, "event");
+    event_json = json;
+    if (event_json != NULL)
+    {
+        //event = new Event();
+        event = &myEvent;
 
-	if (event_json != NULL)
-	{
-		event = new Event();
-		event = &myEvent;
+        event_attr = cJSON_GetObjectItem(event_json, "pluginid");
+        if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
+        {
+            event->plugin_id = stoi(event_attr->valuestring, 0, 10);
+        }
+        event_attr = cJSON_GetObjectItem(event_json, "sid");
+        if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
+        {
+            event->plugin_sid = stoi(event_attr->valuestring, 0, 10);
+        }
+        event_attr = cJSON_GetObjectItem(event_json, "srcip");
+        if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
+        {
+            event->SrcIp = event_attr->valuestring;
+        }
+        event_attr = cJSON_GetObjectItem(event_json, "dstip");
+        if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
+        {
+            event->DstIp = event_attr->valuestring;
+        }
 
-		event_attr = cJSON_GetObjectItem(event_json, "pluginid");
-		if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
-		{
-			event->plugin_id = stoi(event_attr->valuestring, 0, 10);
-		}
-		event_attr = cJSON_GetObjectItem(event_json, "sid");
-		if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
-		{
-			event->plugin_sid = stoi(event_attr->valuestring, 0, 10);
-		}
-		event_attr = cJSON_GetObjectItem(event_json, "src_ip");
-		if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
-		{
-			event->SrcIp = event_attr->valuestring;
-		}
-		event_attr = cJSON_GetObjectItem(event_json, "dst_ip");
-		if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
-		{
-			event->DstIp = event_attr->valuestring;
-		}
+        event_attr = cJSON_GetObjectItem(event_json, "srcport");
+        if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
+        {
+            event->srcport = stoi(event_attr->valuestring, 0, 10);
+        }
 
-		event_attr = cJSON_GetObjectItem(event_json, "src_port");
-		if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
-		{
-			event->srcport = stoi(event_attr->valuestring, 0, 10);
-		}
-
-		event_attr = cJSON_GetObjectItem(event_json, "dst_port");
-		if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
-		{
-			event->dstport = stoi(event_attr->valuestring, 0, 10);
-		}
-		if (event->plugin_id == 0 || event->plugin_sid == 0)
-		{
-			//delete event;
-			event = NULL;
-		}
-	}
-	else
-	{
-		event = NULL;
-	}
-
-	return event;
+        event_attr = cJSON_GetObjectItem(event_json, "dstport");
+        if (cJSON_IsString(event_attr) && (event_attr->valuestring != NULL))
+        {
+            event->dstport = stoi(event_attr->valuestring, 0, 10);
+        }
+        if (event->plugin_id == 0 || event->plugin_sid == 0)
+        {
+            //delete event;
+            event = NULL;
+            printf("Error event NULL\n");
+        }
+    }
+    else
+    {
+        printf("Error event json parser\n");
+        event = NULL;
+    }
+    printf(" event json parser ok !");
+    return event;
 }
 
 void  CorrelationEvent(Event * event)
 {
-	CorreEvent(event);
+    CorreEvent(event);
 }
 
 
@@ -517,20 +519,20 @@ producer.send('sideout', msg)
 
 void ParserEvent(char * strEvent)
 {
-	if (strEvent == NULL)
-	{
-		return;
-	}
-	Event* event = CreatEventObj(string(strEvent));
+    if (strEvent == NULL)
+    {
+        return;
+    }
+    //printf("***ParserEvent\n");
+    Event* event = CreatEventObj(string(strEvent));
 
-	if (event == NULL) return;
+    if (event == NULL) return;
+    //printf("***ParserEvent\n");
+    //printf("******************Event****************\n plugin_id=%d plugin_sid=%d\n srcip=%s dstip=%s srcport=%d dstport=%d\n", event->plugin_id, event->plugin_sid, event->SrcIp.c_str(), event->DstIp.c_str(), event->srcport, event->dstport);
 
-	printf("******************Event****************\n plugin_id=%d plugin_sid=%d\n srcip=%s dstip=%s srcport=%d dstport=%d\n",
-		event->plugin_id, event->plugin_sid, event->SrcIp.c_str(), event->DstIp.c_str(), event->srcport, event->dstport);
+    CorrelationEvent(event);
 
-	CorrelationEvent(event);
-
-	//delete event;
+    //delete event;
 }
 
 
