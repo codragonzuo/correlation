@@ -67,7 +67,7 @@ int producer_init() {
 int sendMessage(std::string msg)
 {
     std::string topic = "attack";
-    producer->poll(0);
+   // producer->poll(0);
 
 retry:
     RdKafka::ErrorCode err =
@@ -94,7 +94,7 @@ retry:
                 NULL);
 
     if (err != RdKafka::ERR_NO_ERROR) 
-	{
+    {
         std::cerr << "% Failed to produce to topic " << topic << ": " <<
                 RdKafka::err2str(err) << std::endl;
 

@@ -1624,7 +1624,16 @@ void Correlation::MatchBacklogs(Event* event)
                 }
                 //这里不能it++，vector删除元素后会自动调整位置和长度
                 printf("backlogs Matched!\n");
-                std::string msg = std::to_string(pBacklogs->directive_id);
+                ostringstream oss;
+                std::string msg = std::string("\"directive\":")
+                            + std::to_string((unsigned int)pBacklogs->directive_id).c_str()
+                            + std::string(",\"sid\":")+std::to_string((unsigned int)event->plugin_sid)
+                            + std::string(",\"srcip\":")+event->SrcIp
+                            + std::string(",\"dstip\":")+event->DstIp
+                            + std::string(",\"srcport\":")+std::to_string((unsigned int)event->srcport)
+                            + std::string(",\"dstport\":")+std::to_string((unsigned int)event->dstport)
+                                 +"}";
+                
                 sendMessage(msg);
                 continue;
             }

@@ -497,7 +497,7 @@ Event * CreatEventObj(string jsonstr)
         printf("Error event json parser\n");
         event = NULL;
     }
-    printf(" event json parser ok !");
+    //printf(" event json parser ok !");
     return event;
 }
 
